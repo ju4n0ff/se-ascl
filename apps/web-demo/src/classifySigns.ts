@@ -11,8 +11,6 @@ function dist(a: Landmark, b: Landmark): number {
 }
 
 function classifyAlphabet(landmarks: Landmark[]): { letter: string; confidence: number } | null {
-  const wrist = landmarks[0];
-
   // Finger extension: tip must be clearly above PIP
   const indexUp = landmarks[8].y < landmarks[6].y - 0.03;
   const middleUp = landmarks[12].y < landmarks[10].y - 0.03;

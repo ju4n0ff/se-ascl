@@ -78,26 +78,28 @@ export const Button: React.FC<ButtonProps> = ({
         ...sizeStyles[size],
         ...variantStyles[variant],
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const target = e.currentTarget;
         if (variant === 'primary') {
-          e.currentTarget.style.boxShadow = 'var(--shadow-lg), 0 0 30px rgba(232, 114, 92, 0.25)';
-          e.currentTarget.style.transform = 'translateY(-1px)';
+          target.style.boxShadow = 'var(--shadow-lg), 0 0 30px rgba(232, 114, 92, 0.25)';
+          target.style.transform = 'translateY(-1px)';
         } else if (variant === 'secondary') {
-          e.currentTarget.style.background = 'var(--color-border-light)';
+          target.style.background = 'var(--color-border-light)';
         }
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const target = e.currentTarget;
         if (variant === 'primary') {
-          e.currentTarget.style.boxShadow = 'var(--shadow-md), var(--shadow-glow)';
-          e.currentTarget.style.transform = 'translateY(0)';
+          target.style.boxShadow = 'var(--shadow-md), var(--shadow-glow)';
+          target.style.transform = 'translateY(0)';
         } else if (variant === 'secondary') {
-          e.currentTarget.style.background = 'var(--color-bg-secondary)';
+          target.style.background = 'var(--color-bg-secondary)';
         }
       }}
-      onMouseDown={(e) => {
+      onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
       }}
-      onMouseUp={(e) => {
+      onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.transform = 'translateY(0) scale(1)';
       }}
       className={className}

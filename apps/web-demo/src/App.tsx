@@ -2,6 +2,16 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ConfidenceLevel, TranscriptEntry } from '@senascl/shared-types';
 import { useHandDetection } from './useHandDetection';
 import { classifySigns } from './classifySigns';
+import {
+  Button,
+  Card,
+  ConfidenceIndicator,
+  SignChip,
+  ProgressBar,
+  AlertOverlay,
+  Waveform,
+} from './components';
+import './styles.css';
 
 const HOLD_MS = 1000;
 const COOLDOWN_MS = 600;
@@ -9,7 +19,7 @@ const COOLDOWN_MS = 600;
 const App: React.FC = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [confidence, setConfidence] = useState<ConfidenceLevel>(ConfidenceLevel.LOW);
-  const [statusMessage, setStatusMessage] = useState('Presiona "Iniciar cámara" para comenzar');
+  const [statusMessage, setStatusMessage] = useState('Presiona "Iniciar" para comenzar');
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [fullText, setFullText] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -109,7 +119,7 @@ const App: React.FC = () => {
           ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           if (results.landmarks) {
             for (const hand of results.landmarks) {
-              ctx.fillStyle = '#1a73e8';
+              ctx.fillStyle = 'var(--color-accent)';
               for (const point of hand) {
                 ctx.beginPath();
                 ctx.arc(
@@ -129,7 +139,7 @@ const App: React.FC = () => {
     [updateHoldProgress]
   );
 
-  const { isLoaded, error: handError, startDetection, stopDetection } =
+  const { isLoaded, startDetection, stopDetection } =
     useHandDetection(videoRef, onResults);
 
   const startCamera = useCallback(async () => {
@@ -197,53 +207,45 @@ const App: React.FC = () => {
     setStatusMessage('Transcripción limpiada');
   }, []);
 
+  const confidenceLevel: 'high' | 'medium' | 'low' =
+    confidence === ConfidenceLevel.HIGH
+      ? 'high'
+      : confidence === ConfidenceLevel.MEDIUM
+      ? 'medium'
+      : 'low';
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 16 }}>
-      <header style={{ textAlign: 'center', padding: '24px 0' }}>
-        <h1 style={{ fontSize: 36, fontWeight: 700, color: '#f0f6fc' }}>SeñasCL</h1>
-        <p style={{ color: '#8b949e', marginTop: 4 }}>Intérprete LSCh → Texto</p>
+    <div className="container">
+      {/* Decorative background blobs */}
+      <div className="blob blob-1" aria-hidden="true" />
+      <div className="blob blob-2" aria-hidden="true" />
+
+      {/* Header */}
+      <header className="header">
+        <h1 className="header-title">SeñasCL</h1>
+        <p className="header-subtitle">Intérprete de Lengua de Señas Chilena</p>
       </header>
 
-      {/* Gesto actual */}
+      {/* Current gesture display */}
       {isCameraActive && currentGesture && (
-        <div style={{ textAlign: 'center', marginBottom: 12 }}>
-          <div
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'var(--space-3)',
+            marginBottom: 'var(--space-4)',
+          }}
+        >
+          <SignChip letter={currentGesture} />
+          <ProgressBar progress={holdProgress} complete={holdProgress >= 1} />
+          <p
             style={{
-              display: 'inline-block',
-              fontSize: 64,
-              fontWeight: 700,
-              color: '#f0f6fc',
-              padding: '8px 24px',
-              backgroundColor: '#21262d',
-              borderRadius: 16,
-              minWidth: 80,
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-xs)',
+              fontFamily: 'var(--font-family)',
             }}
           >
-            {currentGesture}
-          </div>
-          <div
-            style={{
-              marginTop: 8,
-              height: 4,
-              backgroundColor: '#21262d',
-              borderRadius: 2,
-              overflow: 'hidden',
-              maxWidth: 200,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${holdProgress * 100}%`,
-                backgroundColor: holdProgress >= 1 ? '#3fb950' : '#1a73e8',
-                borderRadius: 2,
-                transition: 'width 0.05s linear',
-              }}
-            />
-          </div>
-          <p style={{ color: '#8b949e', fontSize: 12, marginTop: 4 }}>
             {holdProgress >= 1
               ? '✓ Letra registrada'
               : `Mantén ${HOLD_MS / 1000}s para registrar`}
@@ -251,196 +253,217 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Cámara */}
-      <div
-        style={{
-          position: 'relative',
-          borderRadius: 16,
-          overflow: 'hidden',
-          backgroundColor: '#161b22',
-          marginBottom: 16,
-        }}
-      >
+      {/* Camera view */}
+      <div className="camera-container">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          style={{
-            width: '100%',
-            display: isCameraActive ? 'block' : 'none',
-            transform: 'scaleX(-1)',
-          }}
+          className="camera-video"
+          style={{ display: isCameraActive ? 'block' : 'none' }}
         />
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            transform: 'scaleX(-1)',
-          }}
-        />
+        <canvas ref={canvasRef} className="camera-canvas" />
+
+        {/* Animated frame border */}
+        <div className={`camera-frame ${isCameraActive ? 'active' : ''}`} />
+
+        {/* Confidence indicator */}
+        {isCameraActive && (
+          <ConfidenceIndicator
+            level={confidenceLevel}
+            handsDetected={handsDetected}
+          />
+        )}
+
+        {/* Camera off state */}
         {!isCameraActive && (
           <div
             style={{
-              height: 360,
+              position: 'absolute',
+              inset: 0,
               display: 'flex',
               flexDirection: 'column',
+              alignItems: 'center',
               justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <p style={{ fontSize: 20, color: '#f0f6fc' }}>📷 Cámara inactiva</p>
-            <p style={{ color: '#8b949e', marginTop: 8 }}>
-              Presiona "Iniciar" para comenzar
-            </p>
-          </div>
-        )}
-        {isCameraActive && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              padding: '6px 12px',
-              borderRadius: 20,
+              gap: 'var(--space-4)',
+              padding: 'var(--space-8)',
             }}
           >
             <span
               style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: '#3fb950',
+                fontSize: '64px',
+                opacity: 0.4,
+                animation: 'breathe 3s ease-in-out infinite',
               }}
-            />
-            <span style={{ color: '#f0f6fc', fontSize: 12, fontWeight: 600 }}>
-              {handsDetected} mano(s)
+              aria-hidden="true"
+            >
+              📷
             </span>
+            <p
+              style={{
+                fontSize: 'var(--font-size-xl)',
+                color: 'var(--color-text-primary)',
+                fontWeight: 600,
+                fontFamily: 'var(--font-family)',
+              }}
+            >
+              Cámara inactiva
+            </p>
+            <p
+              style={{
+                color: 'var(--color-text-secondary)',
+                fontSize: 'var(--font-size-sm)',
+                fontFamily: 'var(--font-family)',
+              }}
+            >
+              Presiona "Iniciar" para comenzar a interpretar señas
+            </p>
           </div>
         )}
+
+        {/* Alert overlays */}
+        <AlertOverlay
+          icon="💡"
+          message="Mejora la iluminación para mejor detección"
+          visible={isCameraActive && confidence === ConfidenceLevel.LOW && handsDetected > 0}
+        />
+        <AlertOverlay
+          icon="👋"
+          message="Acerca tus manos al centro del encuadre"
+          visible={isCameraActive && handsDetected === 0}
+        />
       </div>
 
+      {/* Error message */}
       {cameraError && (
         <div
           style={{
-            padding: '10px 16px',
-            backgroundColor: '#f85149',
-            color: '#fff',
-            borderRadius: 8,
-            marginBottom: 16,
-            fontSize: 14,
+            padding: 'var(--space-3) var(--space-4)',
+            backgroundColor: 'var(--color-error)',
+            color: 'var(--color-text-inverse)',
+            borderRadius: 'var(--radius-lg)',
+            marginTop: 'var(--space-4)',
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: 500,
+            fontFamily: 'var(--font-family)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
           }}
+          role="alert"
         >
+          <span>⚠</span>
           {cameraError}
         </div>
       )}
 
-      <p style={{ textAlign: 'center', color: '#8b949e', marginBottom: 16, fontSize: 14 }}>
+      {/* Status message */}
+      <p
+        style={{
+          textAlign: 'center',
+          color: 'var(--color-text-secondary)',
+          margin: 'var(--space-4) 0',
+          fontSize: 'var(--font-size-sm)',
+          fontFamily: 'var(--font-family)',
+        }}
+      >
         {statusMessage}
       </p>
 
       {/* Transcript */}
+      <Card variant="default" padding="md">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 'var(--space-4)',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              fontWeight: 700,
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-family)',
+            }}
+          >
+            Transcripción
+          </h2>
+          {fullText && <Waveform isPlaying={false} barCount={5} />}
+        </div>
+
+        <div
+          style={{
+            minHeight: '120px',
+            maxHeight: '300px',
+            overflowY: 'auto',
+          }}
+        >
+          {transcript.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-state-icon" aria-hidden="true">
+                ✋
+              </span>
+              <p className="empty-state-text">
+                {isCameraActive
+                  ? 'Muestra una seña y mantenla...'
+                  : 'Inicia la cámara para comenzar a traducir'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {transcript.map((entry) => (
+                <div key={entry.id} className="transcript-entry">
+                  <span className="transcript-text">{entry.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Action buttons */}
       <div
         style={{
-          backgroundColor: '#161b22',
-          borderRadius: 12,
-          padding: 16,
-          minHeight: 120,
-          marginBottom: 16,
+          display: 'flex',
+          gap: 'var(--space-3)',
+          marginTop: 'var(--space-6)',
         }}
       >
-        {transcript.length === 0 ? (
-          <p style={{ color: '#8b949e', textAlign: 'center', padding: 24 }}>
-            {isCameraActive ? 'Muestra una seña y mantenla...' : 'Inicia la cámara para comenzar'}
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {transcript.map((entry) => (
-              <div
-                key={entry.id}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#21262d',
-                  borderRadius: 8,
-                  fontSize: 18,
-                  color: '#f0f6fc',
-                }}
-              >
-                {entry.text}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Botones */}
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button
+        <Button
+          variant="primary"
+          size="lg"
           onClick={handleToggleCamera}
-          style={{
-            flex: 1,
-            minHeight: 48,
-            padding: '12px 24px',
-            backgroundColor: '#1a73e8',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 12,
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          style={{ flex: 1 }}
         >
-          {isCameraActive ? '⏸ Pausar' : '▶ Iniciar'}
-        </button>
-        <button
+          {isCameraActive ? '⏸ Pausar' : '▶ Iniciar cámara'}
+        </Button>
+
+        <Button
+          variant="success"
+          size="lg"
           onClick={handleSpeak}
           disabled={!fullText}
-          style={{
-            flex: 1,
-            minHeight: 48,
-            padding: '12px 24px',
-            backgroundColor: '#238636',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 12,
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: fullText ? 'pointer' : 'not-allowed',
-            opacity: fullText ? 1 : 0.5,
-          }}
+          style={{ flex: 1 }}
         >
           🔊 Hablar
-        </button>
-        <button
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="lg"
           onClick={handleClear}
-          style={{
-            flex: 1,
-            minHeight: 48,
-            padding: '12px 24px',
-            backgroundColor: '#21262d',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 12,
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          disabled={transcript.length === 0}
         >
-          🗑 Limpiar
-        </button>
+          🗑
+        </Button>
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '32px 0', color: '#8b949e', fontSize: 12 }}>
-        SeñasCL v0.1.0
+      {/* Footer */}
+      <footer className="footer">
+        <p>SeñasCL v0.1.0 — Hecho con ❤️ para la comunidad sorda chilena</p>
       </footer>
     </div>
   );
