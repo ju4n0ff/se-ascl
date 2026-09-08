@@ -119,7 +119,7 @@ const App: React.FC = () => {
           ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           if (results.landmarks) {
             for (const hand of results.landmarks) {
-              ctx.fillStyle = 'var(--color-accent)';
+              ctx.fillStyle = '#E8725C';
               for (const point of hand) {
                 ctx.beginPath();
                 ctx.arc(
@@ -139,8 +139,20 @@ const App: React.FC = () => {
     [updateHoldProgress]
   );
 
-  const { isLoaded, startDetection, stopDetection } =
+  const { isLoaded, error: handError, startDetection, stopDetection } =
     useHandDetection(videoRef, onResults);
+
+  // Auto-start detection when MediaPipe finishes loading and camera is active
+  const isDetectionStartedRef = useRef(false);
+  useEffect(() => {
+    if (isLoaded && isCameraActive && streamRef.current && !isDetectionStartedRef.current) {
+      isDetectionStartedRef.current = true;
+      startDetection();
+    }
+    if (!isCameraActive) {
+      isDetectionStartedRef.current = false;
+    }
+  }, [isLoaded, isCameraActive, startDetection]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -155,8 +167,13 @@ const App: React.FC = () => {
       }
       setIsCameraActive(true);
       setStatusMessage('Cámara activa — esperando manos...');
-      if (isLoaded) startDetection();
-    } catch {
+      console.log('[App] Camera started, isLoaded:', isLoaded);
+      if (isLoaded) {
+        isDetectionStartedRef.current = true;
+        startDetection();
+      }
+    } catch (err) {
+      console.error('[App] Camera error:', err);
       setCameraError('No se pudo acceder a la cámara. Verifica los permisos.');
       setStatusMessage('Error de cámara');
     }
@@ -355,6 +372,29 @@ const App: React.FC = () => {
         >
           <span>⚠</span>
           {cameraError}
+        </div>
+      )}
+
+      {/* Hand detection error */}
+      {handError && (
+        <div
+          style={{
+            padding: 'var(--space-3) var(--space-4)',
+            backgroundColor: 'var(--color-error)',
+            color: 'var(--color-text-inverse)',
+            borderRadius: 'var(--radius-lg)',
+            marginTop: 'var(--space-4)',
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: 500,
+            fontFamily: 'var(--font-family)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+          }}
+          role="alert"
+        >
+          <span>⚠</span>
+          Error de detección: {handError}
         </div>
       )}
 
