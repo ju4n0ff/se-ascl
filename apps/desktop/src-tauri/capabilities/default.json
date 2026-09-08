@@ -1,0 +1,5 @@
+{
+  "identifier": "cl.senascl.desktop",
+  "description": "SeñasCL — Intérprete de Lengua de Señas Chilena",
+  "windows": ["main"]
+}

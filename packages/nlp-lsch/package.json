@@ -1,0 +1,26 @@
+{
+  "name": "@senascl/nlp-lsch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reconstrucción léxica/gramatical LSCh→español, diccionario",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "test": "node --test dist/__tests__/*.test.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@senascl/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}

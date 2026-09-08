@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "SeñasCL",
+  "version": "0.1.0",
+  "identifier": "cl.senascl.desktop",
+  "build": {
+    "frontendDist": "../web-demo/dist",
+    "devUrl": "http://localhost:3001",
+    "beforeDevCommand": "pnpm --filter senascl-web-demo dev",
+    "beforeBuildCommand": "pnpm --filter senascl-web-demo build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SeñasCL — Intérprete LSCh",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

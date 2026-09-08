@@ -1,0 +1,22 @@
+{
+  "name": "@senascl/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tipos TypeScript compartidos para SeñasCL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}

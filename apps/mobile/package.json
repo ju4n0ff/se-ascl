@@ -1,0 +1,26 @@
+{
+  "name": "senascl-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@senascl/core-ml": "workspace:*",
+    "@senascl/landmarks": "workspace:*",
+    "@senascl/nlp-lsch": "workspace:*",
+    "@senascl/shared-types": "workspace:*",
+    "@senascl/tts": "workspace:*",
+    "@senascl/ui-kit": "workspace:*",
+    "react": "^19.0.0",
+    "react-native": "^0.79.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.8.0"
+  }
+}
