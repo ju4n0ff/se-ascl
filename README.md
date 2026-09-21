@@ -10,7 +10,7 @@
 ## Entregables del Hito 1
 
 ### Prototipo Navegable
-*   [Abrir Prototipo Interactivo (Clic aquí)](#) *(Nota: Insertar aquí el enlace público de Figma o Ionic)*
+*   [Abrir Prototipo Interactivo (Clic aquí)](#) *(Nota: Insertar aquí el enlace público)*
 
 ### Documentación Técnica
 Los siguientes documentos se encuentran alojados en la carpeta `docs/` de este repositorio:
