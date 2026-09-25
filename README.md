@@ -1,4 +1,4 @@
-# SignIA - Traductor de Lengua de Señas Chilena
+# SeñaCL - Traductor de Lengua de Señas Chilena
 
 **Promesa del producto:** Entregar una traducción automática, unidireccional y en tiempo real de la Lengua de Señas Chilena (LSCh) a texto y audio mediante una aplicación web de fácil acceso.
 
