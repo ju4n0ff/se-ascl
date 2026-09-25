@@ -3,7 +3,7 @@
 **Promesa del producto:** Entregar una traducción automática, unidireccional y en tiempo real de la Lengua de Señas Chilena (LSCh) a texto y audio mediante una aplicación web de fácil acceso.
 
 ## Equipo de Desarrollo
-*   **Javier Ignacio Concha** - [@UsuarioJavier](https://github.com/#)
+*   **Javier Ignacio Concha** - [@UsuarioJavier](https://github.com/a3rshH)
 *   **Luis Jesús Urbina Garcidueñas** - [@UsuarioLuis](https://github.com/LuisU1138)
 *   **Juan Carlos Vega Graterol** - [@UsuarioJuan](https://github.com/ju4n0ff)
 
