@@ -16,6 +16,6 @@
 Los siguientes documentos se encuentran alojados en la carpeta `docs/` de este repositorio:
 
 *   [Documento de Propuesta (PDF)](./docs/Documento_Propuesta.pdf)
-*   [Láminas de Presentación (PDF)](./docs/PptSeñascl.pdf)
+*   [Láminas de Presentación (PDF)](./docs/PptSeñaCL.pdf)
 *   [Mapa del Producto (PNG)](./docs/Mapa_Producto.png)
 *   [Diagrama de Arquitectura (PNG)](./docs/Diagrama_Arquitectura.png)
