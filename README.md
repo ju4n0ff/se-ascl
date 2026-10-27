@@ -10,7 +10,7 @@
 ## Entregables del Hito 1
 
 ### Prototipo Navegable
-*   [Abrir Prototipo Interactivo (Clic aquí)](#) *(Nota: Insertar aquí el enlace público)*
+*   [Abrir Prototipo Interactivo (Clic aquí)](#) *(https://claude.ai/share/100b9799-7df1-4900-81db-2e1e0eaa9479)*
 
 ### Documentación Técnica
 Los siguientes documentos se encuentran alojados en la carpeta `docs/` de este repositorio:
