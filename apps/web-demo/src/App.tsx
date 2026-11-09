@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ConfidenceLevel, TranscriptEntry } from '@senascl/shared-types';
 import { useHandDetection } from './useHandDetection';
 import { classifySigns } from './classifySigns';
+import { useBackendSocket, HandPayload } from './useBackendSocket';
 import {
   Button,
   Card,
@@ -15,6 +16,7 @@ import './styles.css';
 
 const HOLD_MS = 1000;
 const COOLDOWN_MS = 600;
+const BACKEND_INTERVAL_MS = 500;
 
 const App: React.FC = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -36,6 +38,31 @@ const App: React.FC = () => {
   const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdStartTimeRef = useRef(0);
   const holdAnimRef = useRef<number>(0);
+  const lastBackendSendRef = useRef(0);
+  const latestLandmarksRef = useRef<{ landmarks: { x: number; y: number; z: number }[][] } | null>(null);
+
+  // Backend WebSocket
+  const handleBackendResult = useCallback((result: { predicted_label: string; spanish_text: string; confidence: number; mode: string }) => {
+    if (!result.spanish_text) return;
+    const now = Date.now();
+    if (result.mode === 'dynamic' && result.confidence > 0.5) {
+      entryIdCounter.current += 1;
+      const entry: TranscriptEntry = {
+        id: String(entryIdCounter.current),
+        text: result.spanish_text,
+        timestamp: now,
+        isFingerspelled: false,
+        rawSigns: [],
+      };
+      setTranscript((prev) => [...prev, entry]);
+      setFullText((prev) => prev + ' ' + result.spanish_text);
+    }
+  }, []);
+
+  const { isConnected: backendConnected, error: backendError, sendRecognition } = useBackendSocket({
+    enabled: isCameraActive,
+    onResult: handleBackendResult,
+  });
 
   const updateHoldProgress = useCallback(() => {
     const elapsed = Date.now() - holdStartTimeRef.current;
@@ -51,9 +78,25 @@ const App: React.FC = () => {
       const count = results.landmarks?.length ?? 0;
       setHandsDetected(count);
 
+      // Store latest landmarks for backend
+      if (count > 0 && results.landmarks) {
+        latestLandmarksRef.current = { landmarks: results.landmarks };
+      }
+
       if (count > 0) {
         setConfidence(ConfidenceLevel.HIGH);
-        setStatusMessage(`${count} mano(s) detectada(s)`);
+        setStatusMessage(`${count} mano(s) detectada(s)${backendConnected ? ' · backend OK' : ''}`);
+
+        // Send to backend at throttled rate
+        const sendTime = Date.now();
+        if (backendConnected && results.landmarks && sendTime - lastBackendSendRef.current > BACKEND_INTERVAL_MS) {
+          lastBackendSendRef.current = sendTime;
+          const hands: HandPayload[] = results.landmarks.map((hand, i) => ({
+            landmarks: hand,
+            handedness: i === 0 ? 'Right' : 'Left',
+          }));
+          sendRecognition(count > 1 ? 'dynamic' : 'static', hands);
+        }
 
         const detections = classifySigns(results);
         const now = Date.now();
@@ -136,7 +179,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [updateHoldProgress]
+    [updateHoldProgress, backendConnected, sendRecognition]
   );
 
   const { isLoaded, error: handError, startDetection, stopDetection } =
@@ -241,6 +284,29 @@ const App: React.FC = () => {
       <header className="header">
         <h1 className="header-title">SeñasCL</h1>
         <p className="header-subtitle">Intérprete de Lengua de Señas Chilena</p>
+        {isCameraActive && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: 'var(--font-size-xs)',
+              fontFamily: 'var(--font-family)',
+              color: backendConnected ? 'var(--color-success, #2e7d32)' : 'var(--color-text-secondary)',
+              marginTop: '4px',
+            }}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: backendConnected ? '#2e7d32' : '#999',
+              }}
+            />
+            {backendConnected ? 'Backend conectado' : 'Sin backend'}
+          </div>
+        )}
       </header>
 
       {/* Current gesture display */}
@@ -395,6 +461,25 @@ const App: React.FC = () => {
         >
           <span>⚠</span>
           Error de detección: {handError}
+        </div>
+      )}
+
+      {/* Backend error */}
+      {backendError && isCameraActive && (
+        <div
+          style={{
+            padding: 'var(--space-2) var(--space-3)',
+            backgroundColor: 'var(--color-warning, #b26a00)',
+            color: 'white',
+            borderRadius: 'var(--radius-md)',
+            marginTop: 'var(--space-3)',
+            fontSize: 'var(--font-size-xs)',
+            fontFamily: 'var(--font-family)',
+            textAlign: 'center',
+          }}
+          role="alert"
+        >
+          ⚠ Backend: {backendError}
         </div>
       )}
 
