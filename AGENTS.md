@@ -45,25 +45,25 @@ The system uses two parallel recognition paths:
 
 **Available alternative: LSA64 (Argentine Sign Language)**
 - Public dataset with 64 signs, ~3200 video clips
-- Download: https://github.com/Lenguaje-De-Senas-Argentino/LSA64
+- Download: https://facundoq.github.io/datasets/lsa64/ (Mega/Google Drive, not git)
 - Format: MP4 videos organized by sign class
 - Can be used for: pre-training, transfer learning, architecture validation
 - Cannot replace: LSCh-specific vocabulary and grammar
 
 **Using LSA64 for development:**
 ```bash
-# Download LSA64 dataset
-git clone https://github.com/Lenguaje-De-Senas-Argentino/LSA64.git ml/datasets/LSA64
+# Download LSA64 manually from https://facundoq.github.io/datasets/lsa64/
+# Place videos in ml/datasets/LSA64/<sign_name>/*.mp4
 
-# Extract landmarks from LSA64 videos
-python ml/datasets/extract_landmarks_from_videos.py \
-  --input ml/datasets/LSA64 \
-  --output ml/datasets/lsa64_landmarks.json
+# Extract landmarks (single file per run, label from --label or filename stem)
+python ml/datasets/capture_landmarks.py \
+  --input ml/datasets/LSA64/HOLA \
+  --output ml/datasets/lsa64_hola.json \
+  --label HOLA
 
-# Train temporal model on LSA64 (validate architecture works)
-python ml/training/train_temporal.py \
-  --dataset ml/datasets/lsa64_landmarks.json \
-  --output ml/models/temporal_lsa64.json
+# Note: train_temporal.py expects --dataset-dir (directory of per-clip JSON files),
+# NOT a single landmarks JSON. Convert accordingly or use capture_dynamic_clip.py
+# for the directory-based workflow.
 ```
 
 **Path to LSCh-specific dataset:**
