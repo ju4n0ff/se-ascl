@@ -17,6 +17,7 @@ Chilean Sign Language (LSCh) interpreter: camera captures hand/face landmarks, M
 - **`apps/desktop`** — Tauri wrapper around web-demo, dev on port 3001
 - **`apps/mobile`** — React Native app
 - **`ml/`** — Python ML pipeline (training, export, evaluation). Not part of the JS build.
+- **`backend/`** — Python FastAPI server (Hito 2). WebSocket + REST, PostgreSQL, SVM/LSTM inference.
 
 ## Sign Recognition Architecture (Dual-Path)
 
@@ -38,6 +39,33 @@ The system uses two parallel recognition paths:
 - `GestureSegmenter.ts` — Velocity-based start/end detection (like VAD for hands)
 - `TemporalModel.ts` — GRU implementation matching Python training exactly
 - `SignDecider.ts` — Orchestrates which path to use, translates gloss→Spanish via nlp-lsch
+
+## Backend Architecture (Hito 2)
+
+FastAPI + WebSocket + PostgreSQL. Located in `backend/`.
+
+**Layers:**
+- `app/routes/` — HTTP endpoints (auth, recognize, history) + WebSocket at `/ws/recognize`
+- `app/services/inference.py` — Loads SVM (static) + LSTM (dynamic), runs prediction
+- `app/models/entities.py` — SQLAlchemy models (users, history)
+- `app/schemas/schemas.py` — Pydantic request/response contracts
+- `db/schema.sql` — PostgreSQL creation script (run first)
+- `db/seed.sql` — Test data (fictitious only)
+
+**Key decisions (from Documento de Propuesta):**
+- Client extracts landmarks (MediaPipe), sends only landmark vectors — not video
+- WebSocket for real-time recognition (server pushes results)
+- SVM for static signs (single frame), LSTM for dynamic (temporal sequence)
+- Face landmarks are the only sensitive biometric data (cybersecurity control)
+
+**Running:**
+```bash
+cd backend
+pip install -r requirements.txt
+createdb signia && psql -d signia -f db/schema.sql
+uvicorn app.main:app --reload --port 8000
+# Docs at http://localhost:8000/docs
+```
 
 ## Dataset Situation (Important)
 

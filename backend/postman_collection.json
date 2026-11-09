@@ -1,0 +1,97 @@
+{
+  "info": {
+    "name": "SignIA API",
+    "description": "API del traductor de LSCh — Hito 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "user_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/health" }
+      }
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"test_user\",\n  \"email\": \"test@signia.cl\",\n  \"password\": \"test1234\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/auth/register" }
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.access_token) {",
+              "    pm.collectionVariables.set('token', json.access_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"test_user\",\n  \"password\": \"test1234\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/auth/login" }
+      }
+    },
+    {
+      "name": "Reconocer (static)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mode\": \"static\",\n  \"hands\": [\n    {\n      \"landmarks\": [\n        {\"x\": 0.5, \"y\": 0.3, \"z\": 0.1},\n        {\"x\": 0.51, \"y\": 0.31, \"z\": 0.1},\n        {\"x\": 0.52, \"y\": 0.32, \"z\": 0.1}\n      ],\n      \"handedness\": \"Right\"\n    }\n  ],\n  \"session_id\": 1\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/recognize" }
+      }
+    },
+    {
+      "name": "Reconocer (dynamic)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mode\": \"dynamic\",\n  \"hands\": [\n    {\n      \"landmarks\": [\n        {\"x\": 0.5, \"y\": 0.3, \"z\": 0.1},\n        {\"x\": 0.51, \"y\": 0.31, \"z\": 0.1}\n      ],\n      \"handedness\": \"Right\"\n    },\n    {\n      \"landmarks\": [\n        {\"x\": 0.3, \"y\": 0.4, \"z\": 0.1},\n        {\"x\": 0.31, \"y\": 0.41, \"z\": 0.1}\n      ],\n      \"handedness\": \"Left\"\n    }\n  ],\n  \"session_id\": 1\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/recognize" }
+      }
+    },
+    {
+      "name": "Historial",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/history/{{user_id}}?limit=20" }
+      }
+    },
+    {
+      "name": "Borrar entrada",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{base_url}}/api/history/1" }
+      }
+    }
+  ]
+}
