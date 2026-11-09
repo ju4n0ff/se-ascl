@@ -1,4 +1,4 @@
-# SignIA Backend
+# SeñaCL Backend
 
 ## Requisitos
 
