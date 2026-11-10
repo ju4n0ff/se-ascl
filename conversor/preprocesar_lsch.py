@@ -124,18 +124,10 @@ def extraer_keypoints(results):
     return keypoints
 
 
-def procesar_video(ruta_video, max_frames=SEQUENCE_LENGTH):
+def procesar_video(ruta_video):
     """
-    Lee un video frame a frame y devuelve la lista de vectores de keypoints.
-
-    - Se crea una instancia NUEVA de Holistic por video: Holistic en modo video
-      (static_image_mode=False) hace tracking entre frames, y reutilizar la
-      instancia arrastraría estado del video anterior al siguiente.
-    - La lectura se detiene al alcanzar 'max_frames': equivale a truncar los
-      frames sobrantes al final, pero evita inferencia innecesaria.
-
-    Retorna: list[np.ndarray] con arrays de shape (1629,), o None si el video
-    no se pudo abrir.
+    Lee un video COMPLETO frame a frame y devuelve la lista de vectores de keypoints.
+    Ya no se detiene en el frame 30, captura toda la duración de la seña.
     """
     cap = cv2.VideoCapture(ruta_video)
     if not cap.isOpened():
@@ -145,48 +137,51 @@ def procesar_video(ruta_video, max_frames=SEQUENCE_LENGTH):
     with mp_holistic.Holistic(
         static_image_mode=False,
         model_complexity=MODEL_COMPLEXITY,
-        refine_face_landmarks=False,  # 468 landmarks de rostro (no 478)
+        refine_face_landmarks=False,
         min_detection_confidence=MIN_DETECTION_CONFIDENCE,
         min_tracking_confidence=MIN_TRACKING_CONFIDENCE,
     ) as holistic:
         while cap.isOpened():
             ok, frame_bgr = cap.read()
             if not ok:
-                break  # fin del video o frame corrupto
+                break  # Fin del video
 
-            # OpenCV entrega BGR; MediaPipe espera RGB.
             frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-            # Marcar como no escribible permite a MediaPipe pasar el buffer por referencia.
             frame_rgb.flags.writeable = False
             results = holistic.process(frame_rgb)
 
             secuencia.append(extraer_keypoints(results))
-
-            if max_frames is not None and len(secuencia) >= max_frames:
-                break
 
     cap.release()
     return secuencia
 
 
 # =============================================================================
-# ESTANDARIZACIÓN TEMPORAL
+# ESTANDARIZACIÓN TEMPORAL (NUEVA LÓGICA DE MUESTREO UNIFORME)
 # =============================================================================
 def estandarizar_secuencia(secuencia, longitud=SEQUENCE_LENGTH):
     """
-    Lleva una lista de frames a un tensor de shape exacta (longitud, 1629).
-
-    - Más frames que 'longitud' -> truncado al final.
-    - Menos frames que 'longitud' -> zero-padding al final (post-padding).
-      Sugerencia: en Keras, usar una capa Masking(mask_value=0.0) antes de la
-      LSTM para que ignore los pasos de relleno.
+    Lleva una lista de frames a un tensor de shape exacta (30, 1629).
+    - Si tiene más de 30 frames (ej. 6 segundos = 180 frames): Hace un muestreo 
+      uniforme, seleccionando frames equitativamente distanciados.
+    - Si tiene menos de 30 frames: Aplica zero-padding al final.
     """
-    secuencia = secuencia[:longitud]  # truncado
+    total_frames = len(secuencia)
     tensor = np.zeros((longitud, FEATURES_PER_FRAME), dtype=np.float32)
-    if len(secuencia) > 0:
-        tensor[: len(secuencia)] = np.stack(secuencia, axis=0)
-    return tensor
+    
+    if total_frames == 0:
+        return tensor
 
+    if total_frames <= longitud:
+        # Zero-padding normal si el video duró menos de 1 segundo
+        tensor[:total_frames] = np.stack(secuencia, axis=0)
+    else:
+        # Muestreo uniforme: Calcula 30 índices equidistantes entre 0 y el total de frames
+        indices = np.linspace(0, total_frames - 1, longitud, dtype=int)
+        frames_seleccionados = [secuencia[i] for i in indices]
+        tensor[:] = np.stack(frames_seleccionados, axis=0)
+        
+    return tensor
 
 # =============================================================================
 # E/S: DESCUBRIMIENTO DE VIDEOS Y GUARDADO
