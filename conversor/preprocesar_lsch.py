@@ -14,6 +14,7 @@ Estructura de directorios esperada:
     dataset/videos/<nombre_seña>/<video>.mp4      (entrada)
     dataset/tensores/<nombre_seña>/<video>.npy    (salida, se crea automáticamente)
 
+
 Dimensionalidad por frame (solo coordenadas x, y, z):
     Pose        : 33 landmarks  * 3 =   99
     Rostro      : 468 landmarks * 3 = 1404   (refine_face_landmarks=False)

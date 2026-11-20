@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-TENSORES_DIR = os.path.join("dataset", "tensores")
+TENSORES_DIR = os.path.join("dataset", "train", "tensores")
 FORMA_ESPERADA = (30, 1629)
 TIPO_ESPERADO = np.float32
 
