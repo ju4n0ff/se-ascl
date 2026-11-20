@@ -18,6 +18,7 @@ ml/datasets/**/*.jpg
 ml/datasets/**/*.png
 ml/datasets/**/*.jpeg
 ml/datasets/**/*.npy
+modelos_viejos/
 *.tflite
 *.onnx
 *.pb
@@ -76,3 +77,24 @@ backend/models/*.json
 
 #mis carpetas
 requisitos/
+
+# Entornos virtuales y caché
+.venv/
+.venv_linux/
+__pycache__/
+*.pyc
+
+# Datasets pesados
+dataset/
+*.npy
+*.mp4
+*.mov
+*.avi
+
+# Logs y respaldos
+*.log
+*_anterior.py
+
+# Modelos intermedios (deja fuera solo los de evaluación)
+**/mejor_modelo_eval_webcam.keras
+**/mejor_modelo_comparacion.keras
