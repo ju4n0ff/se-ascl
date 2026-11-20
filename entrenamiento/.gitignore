@@ -1,0 +1,5 @@
+.venv_linux/
+__pycache__/
+dataset/
+*.npy
+*.keras

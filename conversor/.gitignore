@@ -3,3 +3,4 @@ __pycache__/
 dataset/
 *.npy
 *.keras
+!conversor/modelos/mejor_modelo_lsch.keras
