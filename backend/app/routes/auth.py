@@ -1,60 +1,70 @@
+"""Registro y login (anti-enumeración, Argon2id, rate limiting)."""
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from app.db.session import get_db
+
+from app.core.rate_limit import limitar
+from app.core.security import (
+    create_access_token,
+    hash_password_async,
+    verify_password_async,
+)
 from app.db.models import User
-from app.schemas.schemas import UserCreate, UserResponse, Token
-from app.core.config import get_settings
+from app.db.session import get_db
+from app.schemas.schemas import Token, UserCreate, UserLogin, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-settings = get_settings()
+
+MSG_REGISTRO_CONFLICTO = "No se pudo completar el registro con esos datos"
+MSG_CREDENCIALES = "Credenciales inválidas"
 
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(limitar("register", "rate_limit_register_per_min"))],
+)
+async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
+    # El hash se calcula siempre antes de consultar: el tiempo de respuesta no
+    # revela si el usuario o el email ya existían.
+    password_hash = await hash_password_async(payload.password)
 
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
-
-def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-
-
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
-    existing = await db.execute(
-        select(User).where((User.username == payload.username) | (User.email == payload.email))
+    existente = await db.execute(
+        select(User.id).where(or_(User.username == payload.username, User.email == payload.email))
     )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Usuario o email ya existe")
+    if existente.first() is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, MSG_REGISTRO_CONFLICTO)
 
-    user = User(
-        username=payload.username,
-        email=payload.email,
-        password_hash=hash_password(payload.password),
-    )
+    user = User(username=payload.username, email=payload.email, password_hash=password_hash)
     db.add(user)
-    await db.flush()
+    try:
+        await db.flush()
+    except IntegrityError as exc:  # carrera entre dos registros simultáneos
+        await db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, MSG_REGISTRO_CONFLICTO) from exc
     await db.refresh(user)
     return user
 
 
-@router.post("/login", response_model=Token)
-async def login(payload: UserCreate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.username == payload.username))
-    user = result.scalar_one_or_none()
+@router.post(
+    "/login",
+    response_model=Token,
+    dependencies=[Depends(limitar("login", "rate_limit_login_per_min"))],
+)
+async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)) -> Token:
+    resultado = await db.execute(select(User).where(User.username == payload.username))
+    user = resultado.scalar_one_or_none()
 
-    if not user or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Credenciales inválidas")
-
-    token = create_access_token({"sub": str(user.id), "username": user.username})
-    return Token(access_token=token)
+    # Si el usuario no existe se verifica contra un hash dummy (mismo costo Argon2id).
+    valido = await verify_password_async(payload.password, user.password_hash if user else None)
+    if user is None or not valido:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            MSG_CREDENCIALES,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return Token(access_token=create_access_token(user.id))

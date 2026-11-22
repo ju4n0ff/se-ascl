@@ -19,43 +19,59 @@ pip install -r requirements.txt
 
 ## Configuración
 
-```bash
-copy .env.example .env       # Windows
-# cp .env.example .env       # macOS/Linux
+```powershell
+copy .env.example .env
 ```
 
-Editar `.env` con tus credenciales de PostgreSQL.
+Editar `.env` con tus credenciales de PostgreSQL. Variables clave:
+
+| Variable | Descripción |
+|----------|-------------|
+| `DEBUG` | `false` por defecto. Con `false`: sin `/docs`, HSTS activo, WS exige `Origin` y el arranque falla si `SECRET_KEY` es débil. |
+| `SECRET_KEY` | Mínimo 32 caracteres aleatorios. Generar con `python -c "import secrets; print(secrets.token_urlsafe(64))"`. |
+| `ALLOWED_ORIGINS` | Orígenes permitidos para CORS y para el `Origin` del WebSocket, separados por comas (sin `*`). |
+| `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` | Artefactos del modelo v3 (relativos a `backend/`). |
+| `MAX_BODY_BYTES`, `RATE_LIMIT_*`, `WS_*` | Límites anti-DoS (ver `.env.example` y `SECURITY.md`). |
 
 ## Base de datos
 
+PostgreSQL corre en WSL y se accede desde Windows en `127.0.0.1:5432`. Desde una terminal WSL:
+
 ```bash
-# Crear base de datos
-createdb signia
-
-# Crear tablas
-psql -U user -d signia -f db/schema.sql
-
-# Datos de prueba (opcional)
-psql -U user -d signia -f db/seed.sql
+sudo -u postgres createdb signia
+psql -h 127.0.0.1 -U postgres -d signia -f db/schema.sql
+psql -h 127.0.0.1 -U postgres -d signia -f db/seed.sql     # opcional, solo desarrollo
 ```
+
+El seed también se puede cargar desde Windows sin `psql` (idempotente, solo con `DEBUG=true`):
+
+```powershell
+python -m app.db.seed
+```
+
+Usuario de prueba: `test_user` / `Test1234!` (hash Argon2id). Las cuentas creadas antes de la
+migración a Argon2id (hashes bcrypt) ya no pueden iniciar sesión: hay que registrarlas de nuevo.
 
 ## Levantar el servidor
 
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```powershell
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152
 ```
 
-Documentación interactiva: http://localhost:8000/docs
+`--ws-max-size` aplica el tope de 48 KB por mensaje WebSocket también a nivel de protocolo
+(`python -m app.main` ya lo configura). Documentación interactiva (solo con `DEBUG=true`):
+http://localhost:8000/docs (botón **Authorize** para pegar el JWT).
 
 ## Endpoints
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/auth/register` | Registro de usuario |
-| POST | `/api/auth/login` | Login, devuelve JWT |
-| POST | `/api/recognize` | Reconocimiento de una secuencia `(N, 1629)` |
-| GET | `/api/history/{user_id}` | Historial del usuario |
-| DELETE | `/api/history/{entry_id}` | Borrar entrada |
+| POST | `/api/auth/register` | Registro (3/min por IP; `409` genérico si ya existe) |
+| POST | `/api/auth/login` | Login JSON `{username, password}`, devuelve JWT (5/min por IP) |
+| POST | `/api/recognize` | Reconocimiento de una secuencia `(N, 1629)`; JWT opcional (30/min por IP) |
+| GET | `/api/history/me` | 🔒 Historial del usuario autenticado |
+| GET | `/api/history/{user_id}` | 🔒 Historial propio (`403` si `user_id` no es el del token) |
+| DELETE | `/api/history/{entry_id}` | 🔒 Borrar entrada propia (`404` si no existe o es ajena) |
 | GET | `/api/health` | Estado de PostgreSQL y del modelo v3 (503 si está degradado) |
 | GET | `/api/clases` | Glosario de las 89 señas soportadas |
 | WS | `/ws/recognize` | Reconocimiento en streaming, frame a frame |
@@ -74,6 +90,14 @@ Cada punto se envía como `[x, y * (alto / ancho), z]`; un bloque no detectado v
 ```
 
 - `12 <= len(frames) <= 600`, cada frame con exactamente 1629 números finitos (si no, `422`).
+- Alternativa binaria (recomendada para secuencias largas): `Content-Type: application/octet-stream`
+  con un `Float32Array` little-endian de `N * 1629` valores (`N * 6516` bytes). `top_k`,
+  `save_history` y `mode` van como query params: `POST /api/recognize?top_k=3&save_history=true`.
+- Cuerpo máximo: 5 MB (`413`). En JSON sin redondear eso alcanza para ~150 frames; con 5
+  decimales, ~340; en binario caben los 600.
+- Con `Authorization: Bearer <token>`, `save_history: true` y `aceptada: true` la predicción se
+  guarda en `history` (`guardado_en_historial: true`). Sin token la inferencia funciona igual pero
+  no se guarda; un token inválido responde `401`.
 - El servidor remuestrea a 30 frames (`linspace(...).round()` si `N >= 30`, zero-padding si `N < 30`).
 
 Respuesta:
@@ -101,13 +125,19 @@ Cliente → servidor:
 
 | Mensaje | Efecto |
 |---------|--------|
-| `{"type": "frame", "data": [1629 floats]}` o binario `Float32Array` (6516 bytes, little-endian) | Agrega un frame |
-| `{"type": "config", "modo": "auto" \| "manual", "umbral": 0.55, "top_k": 3}` | Configura la sesión |
+| Binario `Float32Array` (6516 bytes, little-endian) — **recomendado para el frontend** | Agrega un frame |
+| `{"type": "frame", "data": [1629 floats]}` (~33 KB sin redondear; útil para pruebas) | Agrega un frame |
+| `{"type": "config", "modo": "auto" \| "manual", "umbral": 0.55, "top_k": 3, "save_history": false}` | Configura la sesión |
+| `{"type": "auth", "token": "<JWT>"}` | Autentica la sesión (habilita `save_history`) |
 | `{"type": "manual_start"}` / `{"type": "manual_stop"}` | Grabación manual (tope 600 frames) |
 | `{"type": "reset"}` | Vacía el buffer |
 
 Modo automático (igual que `conversor/test_local.py`): empieza a grabar tras 3 frames seguidos con
 alguna mano, corta tras 10 frames sin manos o al llegar a 90, y descarta segmentos de menos de 12 frames.
+
+Límites: `Origin` debe estar en `ALLOWED_ORIGINS` (sin `Origin` solo con `DEBUG=true`), máximo 5
+conexiones por IP, 48 KB por mensaje (`1009`), 35 mensajes/s (los excedentes se descartan con un
+error; si persiste, `1008`) y 60 s de inactividad (`1001`). El JWT nunca va en la URL.
 
 Servidor → cliente: `{"type": "estado", ...}`, `{"type": "prediccion", ...}` (mismo contrato que REST
 más `origen` y `aviso`), `{"type": "descartado", "motivo": "ruido", ...}` y `{"type": "error", ...}`.
@@ -122,3 +152,7 @@ más `origen` y `aviso`), `{"type": "descartado", "motivo": "ruido", ...}` y `{"
 
 Las rutas se configuran con `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` y
 `STATIC_MODEL_PATH` (relativas a `backend/`).
+
+## Seguridad
+
+Ver [`SECURITY.md`](SECURITY.md) para el detalle de los controles OWASP implementados.

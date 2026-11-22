@@ -8,12 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.core.exceptions import registrar_manejadores
+from app.core.logging_config import configurar_logging
+from app.core.middleware import BodySizeLimitMiddleware, SecurityHeadersMiddleware
 from app.db.session import engine
 from app.ml.predictor import LSChPredictor
 from app.ml.static_model import StaticModel
 from app.routes import auth, history, meta, recognition, ws
 
 settings = get_settings()
+configurar_logging(settings.debug)
 logger = logging.getLogger(__name__)
 
 
@@ -34,22 +37,31 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+# Superficie mínima en producción: sin Swagger, ReDoc ni openapi.json.
+_docs = {} if settings.debug else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+
 app = FastAPI(
     title="SignIA API",
     description="Traductor de Lengua de Señas Chilena — Backend (modelo LSCh v3)",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
+    **_docs,
 )
 registrar_manejadores(app)
 
-# CORS por lista blanca configurable: Fase 3.
+# Orden: el último agregado es el más externo.
+#   SecurityHeaders (request_id + cabeceras) -> CORS -> límite de body -> app
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.max_body_bytes)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:3001"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.origins,
+    allow_credentials=False,  # JWT en header Authorization, sin cookies
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["X-Request-ID", "Retry-After"],
+    max_age=600,
 )
+app.add_middleware(SecurityHeadersMiddleware, debug=settings.debug)
 
 app.include_router(auth.router)
 app.include_router(recognition.router)
@@ -61,4 +73,11 @@ app.include_router(ws.router)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app.main:app", host=settings.host, port=settings.port, reload=settings.debug)
+    uvicorn.run(
+        "app.main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
+        ws_max_size=settings.ws_max_message_bytes,
+        server_header=False,
+    )
