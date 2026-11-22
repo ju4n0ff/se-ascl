@@ -1,47 +1,52 @@
 {
   "info": {
-    "name": "SignIA API",
-    "description": "API del traductor de LSCh — Hito 2",
+    "name": "SignIA API (LSCh v3)",
+    "description": "API del traductor de LSCh con modelo v3 y controles OWASP. Ejecutar en orden: Register -> Login (guarda {{token}}) -> el resto. Los frames de ejemplo se generan en el pre-request script (30 frames de 1629 floats sintéticos). El WebSocket /ws/recognize no cabe en el formato v2.1: ver backend/README.md. Postman no envía Origin, así que el WS solo lo acepta con DEBUG=true.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://localhost:8000" },
     { "key": "token", "value": "" },
-    { "key": "user_id", "value": "1" }
+    { "key": "user_id", "value": "" },
+    { "key": "entry_id", "value": "1" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 30 frames x 1629 floats: manos con valores (bloques 1503..1628 != 0).",
+          "var frames = [];",
+          "for (var t = 0; t < 30; t++) {",
+          "  var f = new Array(1629);",
+          "  for (var i = 0; i < 1629; i++) { f[i] = Math.round((0.3 + 0.4 * Math.abs(Math.sin(i * 0.37 + t * 0.11))) * 1e5) / 1e5; }",
+          "  frames.push(f);",
+          "}",
+          "pm.variables.set('frames', JSON.stringify(frames));"
+        ]
+      }
+    }
   ],
   "item": [
     {
       "name": "Health",
-      "request": {
-        "method": "GET",
-        "url": { "raw": "{{base_url}}/api/health" }
-      }
+      "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/health" } }
+    },
+    {
+      "name": "Clases (glosario)",
+      "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/clases" } }
     },
     {
       "name": "Register",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"test_user\",\n  \"email\": \"test@signia.cl\",\n  \"password\": \"test1234\"\n}"
-        },
-        "url": { "raw": "{{base_url}}/api/auth/register" }
-      }
-    },
-    {
-      "name": "Login",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "var json = pm.response.json();",
-              "if (json.access_token) {",
-              "    pm.collectionVariables.set('token', json.access_token);",
-              "}"
-            ],
-            "type": "text/javascript"
+              "if (pm.response.code === 201) { pm.collectionVariables.set('user_id', pm.response.json().id); }"
+            ]
           }
         }
       ],
@@ -50,47 +55,82 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"username\": \"test_user\",\n  \"password\": \"test1234\"\n}"
+          "raw": "{\n  \"username\": \"demo_user\",\n  \"email\": \"demo@signia.cl\",\n  \"password\": \"Demo1234!\"\n}"
         },
-        "url": { "raw": "{{base_url}}/api/auth/login" }
+        "url": { "raw": "{{base_url}}/api/auth/register" },
+        "description": "Contraseña: 8-128 caracteres con mayúscula, minúscula y dígito. Username: ^[a-zA-Z0-9_.-]{3,50}$. Duplicados -> 409 genérico. Límite: 3/min por IP."
       }
     },
     {
-      "name": "Reconocer (static)",
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.access_token) { pm.collectionVariables.set('token', json.access_token); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"mode\": \"static\",\n  \"hands\": [\n    {\n      \"landmarks\": [\n        {\"x\": 0.5, \"y\": 0.3, \"z\": 0.1},\n        {\"x\": 0.51, \"y\": 0.31, \"z\": 0.1},\n        {\"x\": 0.52, \"y\": 0.32, \"z\": 0.1}\n      ],\n      \"handedness\": \"Right\"\n    }\n  ],\n  \"session_id\": 1\n}"
+          "raw": "{\n  \"username\": \"demo_user\",\n  \"password\": \"Demo1234!\"\n}"
         },
-        "url": { "raw": "{{base_url}}/api/recognize" }
+        "url": { "raw": "{{base_url}}/api/auth/login" },
+        "description": "Error siempre genérico (401 'Credenciales inválidas'). Límite: 5/min por IP."
       }
     },
     {
-      "name": "Reconocer (dynamic)",
+      "name": "Reconocer (JSON, anónimo)",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"mode\": \"dynamic\",\n  \"hands\": [\n    {\n      \"landmarks\": [\n        {\"x\": 0.5, \"y\": 0.3, \"z\": 0.1},\n        {\"x\": 0.51, \"y\": 0.31, \"z\": 0.1}\n      ],\n      \"handedness\": \"Right\"\n    },\n    {\n      \"landmarks\": [\n        {\"x\": 0.3, \"y\": 0.4, \"z\": 0.1},\n        {\"x\": 0.31, \"y\": 0.41, \"z\": 0.1}\n      ],\n      \"handedness\": \"Left\"\n    }\n  ],\n  \"session_id\": 1\n}"
-        },
-        "url": { "raw": "{{base_url}}/api/recognize" }
+        "body": { "mode": "raw", "raw": "{\n  \"frames\": {{frames}},\n  \"mode\": \"dynamic\",\n  \"top_k\": 3\n}" },
+        "url": { "raw": "{{base_url}}/api/recognize" },
+        "description": "12 <= N <= 600 frames de 1629 números finitos. Sin token no se guarda historial. Límite: 30/min por IP. Para N grandes usar application/octet-stream (Float32Array, N*6516 bytes) con top_k/save_history/mode como query params."
       }
     },
     {
-      "name": "Historial",
+      "name": "Reconocer (JSON, con historial)",
       "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"frames\": {{frames}},\n  \"top_k\": 3,\n  \"save_history\": true\n}" },
+        "url": { "raw": "{{base_url}}/api/recognize" },
+        "description": "Persiste en history solo si el JWT es válido, aceptada=true y save_history=true."
+      }
+    },
+    {
+      "name": "Mi historial",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
         "method": "GET",
-        "url": { "raw": "{{base_url}}/api/history/{{user_id}}?limit=20" }
+        "url": { "raw": "{{base_url}}/api/history/me?limit=20" }
+      }
+    },
+    {
+      "name": "Historial por user_id",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/history/{{user_id}}?limit=20" },
+        "description": "403 si user_id no es el del token."
       }
     },
     {
       "name": "Borrar entrada",
       "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
         "method": "DELETE",
-        "url": { "raw": "{{base_url}}/api/history/1" }
+        "url": { "raw": "{{base_url}}/api/history/{{entry_id}}" },
+        "description": "404 si no existe o pertenece a otro usuario."
       }
     }
   ]

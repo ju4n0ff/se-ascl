@@ -74,6 +74,8 @@ venv/
 backend/models/*.joblib
 backend/models/*.h5
 backend/models/*.json
+!backend/models/config_features.json
+!backend/models/etiquetas_lsch.json
 
 #mis carpetas
 requisitos/
