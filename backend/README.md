@@ -4,7 +4,7 @@
 
 - Python 3.11+
 - PostgreSQL 14+
-- (Opcional) TensorFlow para modelo LSTM dinámico
+- TensorFlow 2.16.2 + Keras 3.15.1 (modelo LSCh v3, CPU)
 
 ## Instalación
 
@@ -53,39 +53,72 @@ Documentación interactiva: http://localhost:8000/docs
 |--------|------|-------------|
 | POST | `/api/auth/register` | Registro de usuario |
 | POST | `/api/auth/login` | Login, devuelve JWT |
-| POST | `/api/recognize` | Reconocimiento (REST) |
+| POST | `/api/recognize` | Reconocimiento de una secuencia `(N, 1629)` |
 | GET | `/api/history/{user_id}` | Historial del usuario |
 | DELETE | `/api/history/{entry_id}` | Borrar entrada |
-| GET | `/api/health` | Health check |
-| WS | `/ws/recognize` | Reconocimiento en tiempo real |
+| GET | `/api/health` | Estado de PostgreSQL y del modelo v3 (503 si está degradado) |
+| GET | `/api/clases` | Glosario de las 89 señas soportadas |
+| WS | `/ws/recognize` | Reconocimiento en streaming, frame a frame |
 
-## WebSocket
+## Contrato de landmarks (modelo LSCh v3)
 
-Conectar a `ws://localhost:8000/ws/recognize`
+Cada frame es un vector de **1629 floats** en este orden (ver `README_ML.md`):
+Pose 33×3 + Rostro 468×3 (`refineFaceLandmarks=false`) + Mano Izq 21×3 + Mano Der 21×3.
+Cada punto se envía como `[x, y * (alto / ancho), z]`; un bloque no detectado va en `0.0`.
+**Nunca** espejar los landmarks (el espejo es solo visual, por CSS).
 
-Enviar:
+### `POST /api/recognize`
+
+```json
+{ "frames": [[0.51, 0.24, -0.32, "... 1629 floats"], "..."], "mode": "dynamic", "top_k": 3 }
+```
+
+- `12 <= len(frames) <= 600`, cada frame con exactamente 1629 números finitos (si no, `422`).
+- El servidor remuestrea a 30 frames (`linspace(...).round()` si `N >= 30`, zero-padding si `N < 30`).
+
+Respuesta:
+
 ```json
 {
+  "aceptada": true,
+  "prediccion": {"clase_raw": "donde_salida.I", "texto": "¿donde salida?", "es_pregunta": true, "confianza": 0.8742},
+  "top_k": [{"clase_raw": "donde_salida.I", "texto": "¿donde salida?", "es_pregunta": true, "confianza": 0.8742}],
+  "frames_recibidos": 38,
+  "latencia_ms": 6.1,
+  "predicted_label": "donde_salida.I",
+  "spanish_text": "¿donde salida?",
+  "confidence": 0.8742,
   "mode": "dynamic",
-  "hands": [
-    {"landmarks": [{"x": 0.5, "y": 0.3, "z": 0.1}, ...], "handedness": "Right"}
-  ]
+  "timestamp": "2026-11-22T12:00:00Z"
 }
 ```
 
-Recibir:
-```json
-{
-  "predicted_label": "HOLA",
-  "spanish_text": "¡Hola!",
-  "confidence": 0.94,
-  "mode": "dynamic"
-}
-```
+`mode: "static"` usa el SVM opcional `models/static_svm.joblib`; si no existe responde `503`.
+
+## WebSocket `/ws/recognize`
+
+Cliente → servidor:
+
+| Mensaje | Efecto |
+|---------|--------|
+| `{"type": "frame", "data": [1629 floats]}` o binario `Float32Array` (6516 bytes, little-endian) | Agrega un frame |
+| `{"type": "config", "modo": "auto" \| "manual", "umbral": 0.55, "top_k": 3}` | Configura la sesión |
+| `{"type": "manual_start"}` / `{"type": "manual_stop"}` | Grabación manual (tope 600 frames) |
+| `{"type": "reset"}` | Vacía el buffer |
+
+Modo automático (igual que `conversor/test_local.py`): empieza a grabar tras 3 frames seguidos con
+alguna mano, corta tras 10 frames sin manos o al llegar a 90, y descarta segmentos de menos de 12 frames.
+
+Servidor → cliente: `{"type": "estado", ...}`, `{"type": "prediccion", ...}` (mismo contrato que REST
+más `origen` y `aviso`), `{"type": "descartado", "motivo": "ruido", ...}` y `{"type": "error", ...}`.
 
 ## Modelos
 
-- **Static (SVM):** `models/static_svm.joblib` — clasificación de posturas fijas (deletreo)
-- **Dynamic (LSTM):** `models/dynamic_lstm.h5` — secuencias temporales (conversación)
+- **Dinámico (oficial):** `models/mejor_modelo_lsch.keras` + `models/etiquetas_lsch.json` +
+  `models/config_features.json` + `app/ml/features_lsch.py` (copias 1:1 de `conversor/`).
+  Se carga una sola vez al arrancar; si `config_features.json` no coincide, el servidor no arranca.
+- **Estático (opcional):** `models/static_svm.joblib`. Si falta, el modo `static` queda deshabilitado
+  y `/api/health` lo informa como `no_disponible`.
 
-Entrenar con los scripts en `ml/training/`.
+Las rutas se configuran con `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` y
+`STATIC_MODEL_PATH` (relativas a `backend/`).

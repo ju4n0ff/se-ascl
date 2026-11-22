@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models.database import get_db
-from app.models.entities import HistoryEntry
+from app.db.session import get_db
+from app.db.models import HistoryEntry
 from app.schemas.schemas import HistoryResponse
 
 router = APIRouter(prefix="/api/history", tags=["history"])

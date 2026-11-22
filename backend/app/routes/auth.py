@@ -4,10 +4,10 @@ from sqlalchemy import select
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from app.models.database import get_db
-from app.models.entities import User
+from app.db.session import get_db
+from app.db.models import User
 from app.schemas.schemas import UserCreate, UserResponse, Token
-from app.config import get_settings
+from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
