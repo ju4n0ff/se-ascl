@@ -63,29 +63,41 @@ Documentación interactiva: http://localhost:8000/docs
 
 Conectar a `ws://localhost:8000/ws/recognize`
 
-Enviar:
+### LSCh v3 (modelo entrenado, recomendado)
+
+Enviar secuencia Holistic cruda `(N,1629)` con `y` isotrópica (`y * h/w`), sin espejar antes de MediaPipe:
+
 ```json
 {
-  "mode": "dynamic",
-  "hands": [
-    {"landmarks": [{"x": 0.5, "y": 0.3, "z": 0.1}, ...], "handedness": "Right"}
-  ]
+  "mode": "lsch_v3",
+  "frames": [[0.1, 0.2, 0.0, "...(1629 floats total)..."]],
+  "top_k": 3
 }
 ```
 
 Recibir:
+
 ```json
 {
-  "predicted_label": "HOLA",
-  "spanish_text": "¡Hola!",
+  "predicted_label": "hola",
+  "spanish_text": "hola",
   "confidence": 0.94,
-  "mode": "dynamic"
+  "mode": "lsch_v3",
+  "accepted": true,
+  "top_k": [{"clase_raw":"hola","texto":"hola","es_pregunta":false,"confianza":0.94}],
+  "frames_received": 38,
+  "latency_ms": 31.2
 }
 ```
 
+### Legacy (simple)
+
+`mode: "static"|"dynamic"` con `hands: [...]` sigue disponible para compatibilidad, pero LSCh v3 usa el modelo entrenado en `conversor/modelos/mejor_modelo_lsch.keras`.
+
 ## Modelos
 
-- **Static (SVM):** `models/static_svm.joblib` — clasificación de posturas fijas (deletreo)
-- **Dynamic (LSTM):** `models/dynamic_lstm.h5` — secuencias temporales (conversación)
+- **LSCh v3 (producción):** `../conversor/modelos/mejor_modelo_lsch.keras` + `etiquetas_lsch.json` + `config_features.json` + `features_lsch.py`
+- **Static (legacy, opcional):** `models/static_svm.joblib`
+- **Dynamic (legacy, opcional):** `models/dynamic_lstm.h5`
 
-Entrenar con los scripts en `ml/training/`.
+La DB es opcional para reconocimiento; solo auth/historial la requieren.

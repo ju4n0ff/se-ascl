@@ -5,6 +5,10 @@ export interface BackendResult {
   spanish_text: string;
   confidence: number;
   mode: string;
+  accepted?: boolean;
+  top_k?: Array<{ clase_raw: string; texto: string; es_pregunta: boolean; confianza: number }>;
+  frames_received?: number;
+  latency_ms?: number;
   note?: string;
   error?: string;
 }
@@ -30,6 +34,7 @@ interface UseBackendSocketReturn {
   isConnected: boolean;
   error: string | null;
   sendRecognition: (mode: 'static' | 'dynamic', hands: HandPayload[]) => void;
+  sendLschV3: (frames: number[][], topK?: number) => void;
   reconnect: () => void;
 }
 
@@ -67,9 +72,10 @@ export function useBackendSocket(options: UseBackendSocketOptions = {}): UseBack
             setError(data.error);
             return;
           }
+          setError(null);
           onResultRef.current?.(data);
         } catch {
-          setError('Respuesta invÃ¡lida del servidor');
+          setError('Respuesta inválida del servidor');
         }
       };
 
@@ -83,7 +89,7 @@ export function useBackendSocket(options: UseBackendSocketOptions = {}): UseBack
       };
 
       ws.onerror = () => {
-        setError('Error de conexiÃ³n con el servidor');
+        setError('Error de conexión con el servidor');
       };
 
       wsRef.current = ws;
@@ -103,13 +109,15 @@ export function useBackendSocket(options: UseBackendSocketOptions = {}): UseBack
     setIsConnected(false);
   }, []);
 
-  const sendRecognition = useCallback(
-    (mode: 'static' | 'dynamic', hands: HandPayload[]) => {
-      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-      wsRef.current.send(JSON.stringify({ mode, hands }));
-    },
-    []
-  );
+  const sendRecognition = useCallback((mode: 'static' | 'dynamic', hands: HandPayload[]) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    wsRef.current.send(JSON.stringify({ mode, hands }));
+  }, []);
+
+  const sendLschV3 = useCallback((frames: number[][], topK = 3) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    wsRef.current.send(JSON.stringify({ mode: 'lsch_v3', frames, top_k: topK }));
+  }, []);
 
   const reconnect = useCallback(() => {
     disconnect();
@@ -118,11 +126,9 @@ export function useBackendSocket(options: UseBackendSocketOptions = {}): UseBack
   }, [connect, disconnect]);
 
   useEffect(() => {
-    if (enabled) {
-      connect();
-    }
+    if (enabled) connect();
     return disconnect;
   }, [enabled, connect, disconnect]);
 
-  return { isConnected, error, sendRecognition, reconnect };
+  return { isConnected, error, sendRecognition, sendLschV3, reconnect };
 }

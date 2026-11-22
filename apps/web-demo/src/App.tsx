@@ -1,24 +1,31 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfidenceLevel, TranscriptEntry } from '@senascl/shared-types';
-import { useHandDetection } from './useHandDetection';
 import { classifySigns } from './classifySigns';
-import { useBackendSocket, HandPayload } from './useBackendSocket';
+import { useHandDetection } from './useHandDetection';
+import { useHolisticCapture } from './useHolisticCapture';
+import { useBackendSocket, BackendResult } from './useBackendSocket';
 import {
+  AlertOverlay,
   Button,
   Card,
   ConfidenceIndicator,
-  SignChip,
   ProgressBar,
-  AlertOverlay,
+  SignChip,
   Waveform,
 } from './components';
 import './styles.css';
 
 const HOLD_MS = 1000;
 const COOLDOWN_MS = 600;
-const BACKEND_INTERVAL_MS = 500;
+const LSCH_START_FRAMES = 3;
+const LSCH_END_FRAMES = 10;
+const LSCH_MIN_FRAMES = 12;
+const LSCH_MAX_FRAMES = 90;
+
+type AppMode = 'static' | 'lsch_v3';
 
 const App: React.FC = () => {
+  const [mode, setMode] = useState<AppMode>('lsch_v3');
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [confidence, setConfidence] = useState<ConfidenceLevel>(ConfidenceLevel.LOW);
   const [statusMessage, setStatusMessage] = useState('Presiona "Iniciar" para comenzar');
@@ -26,8 +33,12 @@ const App: React.FC = () => {
   const [fullText, setFullText] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [handsDetected, setHandsDetected] = useState(0);
-  const [currentGesture, setCurrentGesture] = useState<string>('');
+  const [currentGesture, setCurrentGesture] = useState('');
   const [holdProgress, setHoldProgress] = useState(0);
+  const [lastPrediction, setLastPrediction] = useState<BackendResult | null>(null);
+  const [isRecordingDynamic, setIsRecordingDynamic] = useState(false);
+  const [dynamicFrames, setDynamicFrames] = useState(0);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -35,31 +46,50 @@ const App: React.FC = () => {
   const lastSignRef = useRef('');
   const lastSignTimeRef = useRef(0);
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdStartTimeRef = useRef(0);
   const holdAnimRef = useRef<number>(0);
-  const lastBackendSendRef = useRef(0);
-  const latestLandmarksRef = useRef<{ landmarks: { x: number; y: number; z: number }[][] } | null>(null);
 
-  // Backend WebSocket
-  const handleBackendResult = useCallback((result: { predicted_label: string; spanish_text: string; confidence: number; mode: string }) => {
-    if (!result.spanish_text) return;
-    const now = Date.now();
-    if (result.mode === 'dynamic' && result.confidence > 0.5) {
-      entryIdCounter.current += 1;
-      const entry: TranscriptEntry = {
-        id: String(entryIdCounter.current),
-        text: result.spanish_text,
-        timestamp: now,
-        isFingerspelled: false,
-        rawSigns: [],
-      };
-      setTranscript((prev) => [...prev, entry]);
-      setFullText((prev) => prev + ' ' + result.spanish_text);
-    }
+  const lschBufferRef = useRef<number[][]>([]);
+  const lschPrevRef = useRef<number[][]>([]);
+  const lschHandsStreakRef = useRef(0);
+  const lschNoHandsStreakRef = useRef(0);
+  const lschRecordingRef = useRef(false);
+  const lastSentLschAtRef = useRef(0);
+
+  const addTranscript = useCallback((text: string, isFingerspelled: boolean, rawSigns: any[] = []) => {
+    if (!text.trim()) return;
+    entryIdCounter.current += 1;
+    const entry: TranscriptEntry = {
+      id: String(entryIdCounter.current),
+      text,
+      timestamp: Date.now(),
+      isFingerspelled,
+      rawSigns,
+    };
+    setTranscript((prev) => [...prev, entry]);
+    setFullText((prev) => (prev ? `${prev} ${text}` : text));
   }, []);
 
-  const { isConnected: backendConnected, error: backendError, sendRecognition } = useBackendSocket({
+  const handleBackendResult = useCallback((result: BackendResult) => {
+    setLastPrediction(result);
+    if (result.mode === 'lsch_v3') {
+      if (result.accepted && result.spanish_text) {
+        setConfidence(result.confidence >= 0.75 ? ConfidenceLevel.HIGH : ConfidenceLevel.MEDIUM);
+        addTranscript(result.spanish_text, false);
+        setStatusMessage(`LSCh v3: ${result.spanish_text} (${Math.round(result.confidence * 100)}%)`);
+      } else if (result.predicted_label && result.predicted_label !== 'UNKNOWN') {
+        setStatusMessage(`Baja confianza: ${result.predicted_label} (${Math.round(result.confidence * 100)}%)`);
+        setConfidence(ConfidenceLevel.LOW);
+      }
+      return;
+    }
+
+    if (result.mode === 'dynamic' && result.confidence > 0.5 && result.spanish_text) {
+      addTranscript(result.spanish_text, false);
+    }
+  }, [addTranscript]);
+
+  const { isConnected: backendConnected, error: backendError, sendLschV3 } = useBackendSocket({
     enabled: isCameraActive,
     onResult: handleBackendResult,
   });
@@ -68,134 +98,161 @@ const App: React.FC = () => {
     const elapsed = Date.now() - holdStartTimeRef.current;
     const progress = Math.min(1, elapsed / HOLD_MS);
     setHoldProgress(progress);
-    if (progress < 1) {
-      holdAnimRef.current = requestAnimationFrame(updateHoldProgress);
-    }
+    if (progress < 1) holdAnimRef.current = requestAnimationFrame(updateHoldProgress);
   }, []);
 
-  const onResults = useCallback(
-    (results: { landmarks?: { x: number; y: number; z: number }[][] }) => {
-      const count = results.landmarks?.length ?? 0;
-      setHandsDetected(count);
+  const onStaticResults = useCallback((results: { landmarks?: { x: number; y: number; z: number }[][] }) => {
+    if (mode !== 'static') return;
+    const count = results.landmarks?.length ?? 0;
+    setHandsDetected(count);
 
-      // Store latest landmarks for backend
-      if (count > 0 && results.landmarks) {
-        latestLandmarksRef.current = { landmarks: results.landmarks };
-      }
-
-      if (count > 0) {
-        setConfidence(ConfidenceLevel.HIGH);
-        setStatusMessage(`${count} mano(s) detectada(s)${backendConnected ? ' · backend OK' : ''}`);
-
-        // Send to backend at throttled rate
-        const sendTime = Date.now();
-        if (backendConnected && results.landmarks && sendTime - lastBackendSendRef.current > BACKEND_INTERVAL_MS) {
-          lastBackendSendRef.current = sendTime;
-          const hands: HandPayload[] = results.landmarks.map((hand, i) => ({
-            landmarks: hand,
-            handedness: i === 0 ? 'Right' : 'Left',
-          }));
-          sendRecognition(count > 1 ? 'dynamic' : 'static', hands);
-        }
-
-        const detections = classifySigns(results);
-        const now = Date.now();
-
-        if (detections.length > 0) {
-          const best = detections[0];
-          const isSame = best.signId === lastSignRef.current;
-          const isCoolingDown = now - lastSignTimeRef.current < COOLDOWN_MS;
-
-          setCurrentGesture(best.signId);
-
-          if (isCoolingDown) {
-            // During cooldown, don't register new signs
-          } else if (!isSame) {
-            // New gesture detected — start hold timer
-            if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
-            cancelAnimationFrame(holdAnimRef.current);
-            lastSignRef.current = best.signId;
-            holdStartTimeRef.current = now;
-            holdAnimRef.current = requestAnimationFrame(updateHoldProgress);
-
-            holdTimeoutRef.current = setTimeout(() => {
-              entryIdCounter.current += 1;
-              const entry: TranscriptEntry = {
-                id: String(entryIdCounter.current),
-                text: best.spanishText,
-                timestamp: now,
-                isFingerspelled: best.isFingerspelling,
-                rawSigns: [best],
-              };
-              setTranscript((prev) => [...prev, entry]);
-              setFullText((prev) => prev + best.spanishText);
-              lastSignRef.current = '';
-              lastSignTimeRef.current = Date.now();
-              setHoldProgress(0);
-              cancelAnimationFrame(holdAnimRef.current);
-            }, HOLD_MS);
-          }
-        } else {
-          setCurrentGesture('');
-          setHoldProgress(0);
-          cancelAnimationFrame(holdAnimRef.current);
-        }
-      } else {
-        setConfidence(ConfidenceLevel.LOW);
-        setStatusMessage('Esperando manos...');
-        setCurrentGesture('');
-        setHoldProgress(0);
-        cancelAnimationFrame(holdAnimRef.current);
-        if (holdTimeoutRef.current) {
-          clearTimeout(holdTimeoutRef.current);
-          holdTimeoutRef.current = null;
-        }
-        lastSignRef.current = '';
-      }
-
-      // Draw landmarks
-      if (canvasRef.current && videoRef.current) {
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) {
-          canvasRef.current.width = videoRef.current.videoWidth;
-          canvasRef.current.height = videoRef.current.videoHeight;
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          if (results.landmarks) {
-            for (const hand of results.landmarks) {
-              ctx.fillStyle = '#E8725C';
-              for (const point of hand) {
-                ctx.beginPath();
-                ctx.arc(
-                  point.x * canvasRef.current.width,
-                  point.y * canvasRef.current.height,
-                  3,
-                  0,
-                  2 * Math.PI
-                );
-                ctx.fill();
-              }
-            }
+    if (canvasRef.current && videoRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        for (const hand of results.landmarks ?? []) {
+          ctx.fillStyle = '#E8725C';
+          for (const p of hand) {
+            ctx.beginPath();
+            ctx.arc(p.x * canvasRef.current.width, p.y * canvasRef.current.height, 3, 0, Math.PI * 2);
+            ctx.fill();
           }
         }
       }
-    },
-    [updateHoldProgress, backendConnected, sendRecognition]
-  );
+    }
 
-  const { isLoaded, error: handError, startDetection, stopDetection } =
-    useHandDetection(videoRef, onResults);
+    if (count === 0) {
+      setConfidence(ConfidenceLevel.LOW);
+      setStatusMessage('Esperando manos...');
+      setCurrentGesture('');
+      setHoldProgress(0);
+      cancelAnimationFrame(holdAnimRef.current);
+      if (holdTimeoutRef.current) { clearTimeout(holdTimeoutRef.current); holdTimeoutRef.current = null; }
+      lastSignRef.current = '';
+      return;
+    }
 
-  // Auto-start detection when MediaPipe finishes loading and camera is active
-  const isDetectionStartedRef = useRef(false);
+    setConfidence(ConfidenceLevel.HIGH);
+    setStatusMessage(`${count} mano(s) detectada(s)`);
+    const detections = classifySigns(results as any);
+    const now = Date.now();
+    if (detections.length === 0) {
+      setCurrentGesture('');
+      setHoldProgress(0);
+      cancelAnimationFrame(holdAnimRef.current);
+      return;
+    }
+
+    const best = detections[0];
+    const isSame = best.signId === lastSignRef.current;
+    const isCoolingDown = now - lastSignTimeRef.current < COOLDOWN_MS;
+    setCurrentGesture(best.signId);
+
+    if (isCoolingDown || isSame) return;
+
+    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+    cancelAnimationFrame(holdAnimRef.current);
+    lastSignRef.current = best.signId;
+    holdStartTimeRef.current = now;
+    holdAnimRef.current = requestAnimationFrame(updateHoldProgress);
+
+    holdTimeoutRef.current = setTimeout(() => {
+      addTranscript(best.spanishText, best.isFingerspelling, [best]);
+      lastSignRef.current = '';
+      lastSignTimeRef.current = Date.now();
+      setHoldProgress(0);
+      cancelAnimationFrame(holdAnimRef.current);
+    }, HOLD_MS);
+  }, [addTranscript, mode, updateHoldProgress]);
+
+  const { isLoaded: staticLoaded, error: staticError, startDetection: startStatic, stopDetection: stopStatic } =
+    useHandDetection(videoRef, onStaticResults);
+
+  const onHolisticFrame = useCallback((frame: { vector: number[]; hasLeftHand: boolean; hasRightHand: boolean }) => {
+    if (mode !== 'lsch_v3') return;
+    const hasHands = frame.hasLeftHand || frame.hasRightHand;
+    setHandsDetected((frame.hasLeftHand ? 1 : 0) + (frame.hasRightHand ? 1 : 0));
+
+    if (canvasRef.current && videoRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+
+    if (!lschRecordingRef.current) {
+      lschPrevRef.current.push(frame.vector);
+      if (lschPrevRef.current.length > LSCH_START_FRAMES) lschPrevRef.current.shift();
+      if (hasHands) lschHandsStreakRef.current += 1;
+      else lschHandsStreakRef.current = 0;
+
+      if (lschHandsStreakRef.current >= LSCH_START_FRAMES) {
+        lschRecordingRef.current = true;
+        setIsRecordingDynamic(true);
+        lschBufferRef.current = [...lschPrevRef.current];
+        lschNoHandsStreakRef.current = 0;
+        setStatusMessage('Grabando seña...');
+      }
+      return;
+    }
+
+    lschBufferRef.current.push(frame.vector);
+    setDynamicFrames(lschBufferRef.current.length);
+    if (hasHands) lschNoHandsStreakRef.current = 0;
+    else lschNoHandsStreakRef.current += 1;
+
+    const shouldEnd = lschNoHandsStreakRef.current >= LSCH_END_FRAMES || lschBufferRef.current.length >= LSCH_MAX_FRAMES;
+    if (!shouldEnd) return;
+
+    const trimmed = lschNoHandsStreakRef.current > 0
+      ? lschBufferRef.current.slice(0, Math.max(0, lschBufferRef.current.length - lschNoHandsStreakRef.current))
+      : lschBufferRef.current.slice();
+
+    lschRecordingRef.current = false;
+    setIsRecordingDynamic(false);
+    setDynamicFrames(0);
+    lschBufferRef.current = [];
+    lschPrevRef.current = [];
+    lschHandsStreakRef.current = 0;
+    lschNoHandsStreakRef.current = 0;
+
+    if (trimmed.length < LSCH_MIN_FRAMES) {
+      setStatusMessage('Seña muy corta, intenta de nuevo');
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSentLschAtRef.current < 300) return;
+    lastSentLschAtRef.current = now;
+
+    if (!backendConnected) {
+      setStatusMessage('Backend no conectado. Inicia el servidor en localhost:8000');
+      return;
+    }
+
+    setStatusMessage(`Enviando ${trimmed.length} frames al modelo LSCh v3...`);
+    sendLschV3(trimmed, 3);
+  }, [backendConnected, mode, sendLschV3]);
+
+  const { isLoaded: holisticLoaded, error: holisticError, start: startHolistic, stop: stopHolistic } =
+    useHolisticCapture({ videoRef, onFrame: onHolisticFrame, sampleEveryMs: 66 });
+
+  const activeLoaded = mode === 'static' ? staticLoaded : holisticLoaded;
+  const activeError = mode === 'static' ? staticError : holisticError;
+
   useEffect(() => {
-    if (isLoaded && isCameraActive && streamRef.current && !isDetectionStartedRef.current) {
-      isDetectionStartedRef.current = true;
-      startDetection();
-    }
-    if (!isCameraActive) {
-      isDetectionStartedRef.current = false;
-    }
-  }, [isLoaded, isCameraActive, startDetection]);
+    if (!isCameraActive || !streamRef.current || !activeLoaded) return;
+    if (mode === 'static') startStatic();
+    else startHolistic();
+    return () => {
+      if (mode === 'static') stopStatic();
+      else stopHolistic();
+    };
+  }, [activeLoaded, isCameraActive, mode, startHolistic, startStatic, stopHolistic, stopStatic]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -209,23 +266,18 @@ const App: React.FC = () => {
         await videoRef.current.play();
       }
       setIsCameraActive(true);
-      setStatusMessage('Cámara activa — esperando manos...');
-      console.log('[App] Camera started, isLoaded:', isLoaded);
-      if (isLoaded) {
-        isDetectionStartedRef.current = true;
-        startDetection();
-      }
+      setStatusMessage(mode === 'lsch_v3' ? 'Cámara activa — esperando seña...' : 'Cámara activa — esperando manos...');
     } catch (err) {
       console.error('[App] Camera error:', err);
       setCameraError('No se pudo acceder a la cámara. Verifica los permisos.');
       setStatusMessage('Error de cámara');
     }
-  }, [isLoaded, startDetection]);
+  }, [mode]);
 
   const stopCamera = useCallback(() => {
-    stopDetection();
+    stopStatic();
+    stopHolistic();
     if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
-    if (cooldownTimeoutRef.current) clearTimeout(cooldownTimeoutRef.current);
     cancelAnimationFrame(holdAnimRef.current);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -233,20 +285,17 @@ const App: React.FC = () => {
     }
     if (videoRef.current) videoRef.current.srcObject = null;
     setIsCameraActive(false);
+    setIsRecordingDynamic(false);
+    setDynamicFrames(0);
+    lschRecordingRef.current = false;
+    lschBufferRef.current = [];
+    lschPrevRef.current = [];
     setCurrentGesture('');
     setHoldProgress(0);
     setStatusMessage('Cámara pausada');
-  }, [stopDetection]);
+  }, [stopHolistic, stopStatic]);
 
-  useEffect(() => {
-    return () => {
-      stopDetection();
-      if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
-      if (cooldownTimeoutRef.current) clearTimeout(cooldownTimeoutRef.current);
-      cancelAnimationFrame(holdAnimRef.current);
-      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
-    };
-  }, [stopDetection]);
+  useEffect(() => () => stopCamera(), [stopCamera]);
 
   const handleToggleCamera = useCallback(() => {
     if (isCameraActive) stopCamera();
@@ -263,332 +312,121 @@ const App: React.FC = () => {
   const handleClear = useCallback(() => {
     setTranscript([]);
     setFullText('');
+    setLastPrediction(null);
     lastSignRef.current = '';
     setStatusMessage('Transcripción limpiada');
   }, []);
 
   const confidenceLevel: 'high' | 'medium' | 'low' =
-    confidence === ConfidenceLevel.HIGH
-      ? 'high'
-      : confidence === ConfidenceLevel.MEDIUM
-      ? 'medium'
-      : 'low';
+    confidence === ConfidenceLevel.HIGH ? 'high' : confidence === ConfidenceLevel.MEDIUM ? 'medium' : 'low';
 
   return (
     <div className="container">
-      {/* Decorative background blobs */}
       <div className="blob blob-1" aria-hidden="true" />
       <div className="blob blob-2" aria-hidden="true" />
 
-      {/* Header */}
       <header className="header">
         <h1 className="header-title">SeñasCL</h1>
         <p className="header-subtitle">Intérprete de Lengua de Señas Chilena</p>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+          <Button variant={mode === 'lsch_v3' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('lsch_v3')} disabled={isCameraActive}>
+            Modelo LSCh v3
+          </Button>
+          <Button variant={mode === 'static' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('static')} disabled={isCameraActive}>
+            Deletreo estático
+          </Button>
+        </div>
         {isCameraActive && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: 'var(--font-size-xs)',
-              fontFamily: 'var(--font-family)',
-              color: backendConnected ? 'var(--color-success, #2e7d32)' : 'var(--color-text-secondary)',
-              marginTop: '4px',
-            }}
-          >
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: backendConnected ? '#2e7d32' : '#999',
-              }}
-            />
-            {backendConnected ? 'Backend conectado' : 'Sin backend'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-xs)', color: backendConnected ? '#2e7d32' : 'var(--color-text-secondary)', marginTop: 4, justifyContent: 'center' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: backendConnected ? '#2e7d32' : '#999' }} />
+            {backendConnected ? 'Backend conectado' : 'Sin backend (LSCh v3 requiere backend)'}
           </div>
         )}
       </header>
 
-      {/* Current gesture display */}
-      {isCameraActive && currentGesture && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 'var(--space-3)',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
+      {mode === 'static' && isCameraActive && currentGesture && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
           <SignChip letter={currentGesture} />
           <ProgressBar progress={holdProgress} complete={holdProgress >= 1} />
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 'var(--font-size-xs)',
-              fontFamily: 'var(--font-family)',
-            }}
-          >
-            {holdProgress >= 1
-              ? '✓ Letra registrada'
-              : `Mantén ${HOLD_MS / 1000}s para registrar`}
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+            {holdProgress >= 1 ? '✓ Letra registrada' : `Mantén ${HOLD_MS / 1000}s para registrar`}
           </p>
         </div>
       )}
 
-      {/* Camera view */}
+      {mode === 'lsch_v3' && isCameraActive && (
+        <Card variant="default" padding="md">
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>{isRecordingDynamic ? 'Grabando seña...' : 'Esperando seña'}</div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+                Frames: {dynamicFrames} {lastPrediction?.latency_ms ? `· latencia ${lastPrediction.latency_ms}ms` : ''}
+              </div>
+            </div>
+            {lastPrediction?.top_k && lastPrediction.top_k.length > 0 && (
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+                Top: {lastPrediction.top_k.slice(0, 3).map((x) => `${x.texto} ${Math.round(x.confianza * 100)}%`).join(' · ')}
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       <div className="camera-container">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="camera-video"
-          style={{ display: isCameraActive ? 'block' : 'none' }}
-        />
+        <video ref={videoRef} autoPlay playsInline muted className="camera-video" style={{ display: isCameraActive ? 'block' : 'none' }} />
         <canvas ref={canvasRef} className="camera-canvas" />
-
-        {/* Animated frame border */}
         <div className={`camera-frame ${isCameraActive ? 'active' : ''}`} />
+        {isCameraActive && <ConfidenceIndicator level={confidenceLevel} handsDetected={handsDetected} />}
 
-        {/* Confidence indicator */}
-        {isCameraActive && (
-          <ConfidenceIndicator
-            level={confidenceLevel}
-            handsDetected={handsDetected}
-          />
-        )}
-
-        {/* Camera off state */}
         {!isCameraActive && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--space-4)',
-              padding: 'var(--space-8)',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '64px',
-                opacity: 0.4,
-                animation: 'breathe 3s ease-in-out infinite',
-              }}
-              aria-hidden="true"
-            >
-              📷
-            </span>
-            <p
-              style={{
-                fontSize: 'var(--font-size-xl)',
-                color: 'var(--color-text-primary)',
-                fontWeight: 600,
-                fontFamily: 'var(--font-family)',
-              }}
-            >
-              Cámara inactiva
-            </p>
-            <p
-              style={{
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-sm)',
-                fontFamily: 'var(--font-family)',
-              }}
-            >
-              Presiona "Iniciar" para comenzar a interpretar señas
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-4)', padding: 'var(--space-8)' }}>
+            <span style={{ fontSize: 64, opacity: 0.4, animation: 'breathe 3s ease-in-out infinite' }} aria-hidden="true">📷</span>
+            <p style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Cámara inactiva</p>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+              {mode === 'lsch_v3' ? 'Inicia para reconocer señas con el modelo entrenado LSCh v3' : 'Inicia para deletreo estático'}
             </p>
           </div>
         )}
 
-        {/* Alert overlays */}
-        <AlertOverlay
-          icon="💡"
-          message="Mejora la iluminación para mejor detección"
-          visible={isCameraActive && confidence === ConfidenceLevel.LOW && handsDetected > 0}
-        />
-        <AlertOverlay
-          icon="👋"
-          message="Acerca tus manos al centro del encuadre"
-          visible={isCameraActive && handsDetected === 0}
-        />
+        <AlertOverlay icon="💡" message="Mejora la iluminación para mejor detección" visible={isCameraActive && confidence === ConfidenceLevel.LOW && handsDetected > 0 && mode === 'static'} />
+        <AlertOverlay icon="👋" message="Acerca tus manos al centro del encuadre" visible={isCameraActive && handsDetected === 0} />
       </div>
 
-      {/* Error message */}
-      {cameraError && (
-        <div
-          style={{
-            padding: 'var(--space-3) var(--space-4)',
-            backgroundColor: 'var(--color-error)',
-            color: 'var(--color-text-inverse)',
-            borderRadius: 'var(--radius-lg)',
-            marginTop: 'var(--space-4)',
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 500,
-            fontFamily: 'var(--font-family)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-          }}
-          role="alert"
-        >
-          <span>⚠</span>
-          {cameraError}
-        </div>
-      )}
+      {cameraError && <div role="alert" style={{ padding: 'var(--space-3) var(--space-4)', backgroundColor: 'var(--color-error)', color: 'white', borderRadius: 'var(--radius-lg)', marginTop: 'var(--space-4)' }}>⚠ {cameraError}</div>}
+      {activeError && <div role="alert" style={{ padding: 'var(--space-3) var(--space-4)', backgroundColor: 'var(--color-error)', color: 'white', borderRadius: 'var(--radius-lg)', marginTop: 'var(--space-4)' }}>⚠ Error de detección: {activeError}</div>}
+      {backendError && isCameraActive && <div role="alert" style={{ padding: 'var(--space-2) var(--space-3)', backgroundColor: 'var(--color-warning, #b26a00)', color: 'white', borderRadius: 'var(--radius-md)', marginTop: 'var(--space-3)', fontSize: 'var(--font-size-xs)', textAlign: 'center' }}>⚠ Backend: {backendError}</div>}
 
-      {/* Hand detection error */}
-      {handError && (
-        <div
-          style={{
-            padding: 'var(--space-3) var(--space-4)',
-            backgroundColor: 'var(--color-error)',
-            color: 'var(--color-text-inverse)',
-            borderRadius: 'var(--radius-lg)',
-            marginTop: 'var(--space-4)',
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 500,
-            fontFamily: 'var(--font-family)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-          }}
-          role="alert"
-        >
-          <span>⚠</span>
-          Error de detección: {handError}
-        </div>
-      )}
+      <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', margin: 'var(--space-4) 0', fontSize: 'var(--font-size-sm)' }}>{statusMessage}</p>
 
-      {/* Backend error */}
-      {backendError && isCameraActive && (
-        <div
-          style={{
-            padding: 'var(--space-2) var(--space-3)',
-            backgroundColor: 'var(--color-warning, #b26a00)',
-            color: 'white',
-            borderRadius: 'var(--radius-md)',
-            marginTop: 'var(--space-3)',
-            fontSize: 'var(--font-size-xs)',
-            fontFamily: 'var(--font-family)',
-            textAlign: 'center',
-          }}
-          role="alert"
-        >
-          ⚠ Backend: {backendError}
-        </div>
-      )}
-
-      {/* Status message */}
-      <p
-        style={{
-          textAlign: 'center',
-          color: 'var(--color-text-secondary)',
-          margin: 'var(--space-4) 0',
-          fontSize: 'var(--font-size-sm)',
-          fontFamily: 'var(--font-family)',
-        }}
-      >
-        {statusMessage}
-      </p>
-
-      {/* Transcript */}
       <Card variant="default" padding="md">
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              fontFamily: 'var(--font-family)',
-            }}
-          >
-            Transcripción
-          </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>Transcripción</h2>
           {fullText && <Waveform isPlaying={false} barCount={5} />}
         </div>
-
-        <div
-          style={{
-            minHeight: '120px',
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}
-        >
+        <div style={{ minHeight: 120, maxHeight: 300, overflowY: 'auto' }}>
           {transcript.length === 0 ? (
             <div className="empty-state">
-              <span className="empty-state-icon" aria-hidden="true">
-                ✋
-              </span>
-              <p className="empty-state-text">
-                {isCameraActive
-                  ? 'Muestra una seña y mantenla...'
-                  : 'Inicia la cámara para comenzar a traducir'}
-              </p>
+              <span className="empty-state-icon" aria-hidden="true">✋</span>
+              <p className="empty-state-text">{isCameraActive ? (mode === 'lsch_v3' ? 'Realiza una seña frente a la cámara...' : 'Muestra una seña y mantenla...') : 'Inicia la cámara para comenzar a traducir'}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               {transcript.map((entry) => (
-                <div key={entry.id} className="transcript-entry">
-                  <span className="transcript-text">{entry.text}</span>
-                </div>
+                <div key={entry.id} className="transcript-entry"><span className="transcript-text">{entry.text}</span></div>
               ))}
             </div>
           )}
         </div>
       </Card>
 
-      {/* Action buttons */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--space-3)',
-          marginTop: 'var(--space-6)',
-        }}
-      >
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleToggleCamera}
-          style={{ flex: 1 }}
-        >
-          {isCameraActive ? '⏸ Pausar' : '▶ Iniciar cámara'}
-        </Button>
-
-        <Button
-          variant="success"
-          size="lg"
-          onClick={handleSpeak}
-          disabled={!fullText}
-          style={{ flex: 1 }}
-        >
-          🔊 Hablar
-        </Button>
-
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={handleClear}
-          disabled={transcript.length === 0}
-        >
-          🗑
-        </Button>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)' }}>
+        <Button variant="primary" size="lg" onClick={handleToggleCamera} style={{ flex: 1 }}>{isCameraActive ? '⏸ Pausar' : '▶ Iniciar cámara'}</Button>
+        <Button variant="success" size="lg" onClick={handleSpeak} disabled={!fullText} style={{ flex: 1 }}>🔊 Hablar</Button>
+        <Button variant="secondary" size="lg" onClick={handleClear} disabled={transcript.length === 0}>🗑</Button>
       </div>
 
-      {/* Footer */}
       <footer className="footer">
-        <p>SeñasCL v0.1.0 — Hecho con ❤️ para la comunidad sorda chilena</p>
+        <p>SeñasCL v0.1.0 — LSCh v3: modelo entrenado + backend + frontend integrados</p>
       </footer>
     </div>
   );
