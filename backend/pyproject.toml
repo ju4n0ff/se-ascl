@@ -1,0 +1,40 @@
+[project]
+name = "signia-backend"
+version = "0.4.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+extend-exclude = ["venv", "models", "db"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes, I: isort, B: bugbear, UP: pyupgrade, S: flake8-bandit
+select = ["E", "W", "F", "I", "B", "UP", "S"]
+ignore = [
+    "B008",  # Depends()/Query() en valores por defecto: patrón estándar de FastAPI
+]
+
+[tool.ruff.lint.per-file-ignores]
+# features_lsch.py es copia 1:1 de conversor/ (paridad): no se reformatea.
+"app/ml/features_lsch.py" = ["ALL"]
+# Tests: assert, credenciales ficticias y subprocess controlado.
+"tests/**" = ["S101", "S105", "S106", "S603", "S311"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "utils"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers"
+markers = ["slow: pruebas que lanzan subprocesos"]
+filterwarnings = [
+    "ignore::DeprecationWarning:tensorflow.*",
+    "ignore::DeprecationWarning:keras.*",
+    "ignore::DeprecationWarning:google.*",
+    # starlette 0.38 usa un alias de anyio deprecado (no es código del proyecto)
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]

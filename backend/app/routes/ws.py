@@ -286,7 +286,7 @@ async def ws_recognize(websocket: WebSocket) -> None:
                 mensaje = await asyncio.wait_for(
                     websocket.receive(), timeout=settings.ws_idle_timeout_s
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await websocket.close(code=CLOSE_GOING_AWAY, reason="Inactividad")
                 return
             if mensaje["type"] == "websocket.disconnect":

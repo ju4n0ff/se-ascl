@@ -18,7 +18,8 @@ from app.db.session import async_session, engine
 
 USERNAME = "test_user"
 EMAIL = "test@signia.cl"
-PASSWORD_DEV = "Test1234!"  # nosec B105 - credencial ficticia solo para DEBUG=true
+# Credencial ficticia, solo para DEBUG=true.
+PASSWORD_DEV = "Test1234!"  # nosec B105
 HISTORIAL = [
     ("hola", "hola", 0.94),
     ("gracias", "gracias", 0.87),

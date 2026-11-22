@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import numpy as np
@@ -157,6 +157,6 @@ async def recognize(
     return RecognitionResponse(
         **resultado,
         **campos_history(resultado, mode),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         guardado_en_historial=guardado,
     )

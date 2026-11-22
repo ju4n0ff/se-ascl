@@ -153,6 +153,29 @@ más `origen` y `aviso`), `{"type": "descartado", "motivo": "ruido", ...}` y `{"
 Las rutas se configuran con `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` y
 `STATIC_MODEL_PATH` (relativas a `backend/`).
 
+## Tests y quality gates
+
+La suite (`tests/`) corre contra la base aislada **`signia_test`** (nunca `signia`): la URL sale de
+`TEST_DATABASE_URL` (por defecto `postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/signia_test`)
+y la sesión se aborta si el nombre de la base no termina en `_test`. Las tablas se truncan antes de
+cada test y el rate limiter se reinicia. La configuración de los tests no depende de `backend/.env`.
+
+```powershell
+pip install -r requirements-dev.txt
+# desde la raíz del repo
+ruff check backend/app backend/tests
+bandit -r backend/app -ll
+pytest backend/tests -v
+```
+
+| Archivo | Cubre |
+|---|---|
+| `test_ml_parity.py` | Paridad hasta el 4.º decimal contra `conversor/features_lsch.py` (JSON y binario, N=15/30/45), artefactos 1:1, remuestreo, formateo `.I`, semáforo |
+| `test_security.py` | Auth/JWT manipulados, anti-BOLA/IDOR, NaN/Inf, 413 (Content-Length y chunked), 415, 429, cabeceras, CORS, handler 500, WebSocket (Origin, 1009, 1001, límites) |
+| `test_auth_history.py` | Health, Argon2id, historial y reglas de persistencia de `/api/recognize` |
+| `test_websocket.py` | Máquina de estados: modo auto, ruido descartado, modo manual, aislamiento y persistencia |
+| `test_config_prod.py` | Validación de `Settings`, app con `DEBUG=false` (subproceso), seed idempotente |
+
 ## Seguridad
 
 Ver [`SECURITY.md`](SECURITY.md) para el detalle de los controles OWASP implementados.

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -16,7 +16,8 @@ from app.core.config import ALGORITMOS_JWT_PERMITIDOS, get_settings
 from app.db.models import User
 from app.db.session import get_db
 
-TOKEN_TYPE_ACCESS = "access"
+# Valor del claim "type" del JWT, no un secreto.
+TOKEN_TYPE_ACCESS = "access"  # noqa: S105  # nosec B105
 CLAIMS_REQUERIDOS = ["sub", "exp", "iat", "jti", "type"]
 
 # Argon2id (variante por defecto de argon2-cffi) con los parámetros recomendados por pwdlib.
@@ -62,7 +63,7 @@ async def verify_password_async(plain: str, hashed: str | None) -> bool:
 # ------------------------------------------------------------------------- JWT
 def create_access_token(user_id: int) -> str:
     settings = get_settings()
-    ahora = datetime.now(timezone.utc)
+    ahora = datetime.now(UTC)
     payload = {
         "sub": str(user_id),
         "iat": ahora,
