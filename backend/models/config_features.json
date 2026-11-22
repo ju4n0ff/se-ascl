@@ -1,0 +1,351 @@
+{
+  "version": 3,
+  "features_por_frame": 576,
+  "requiere_y_isotropica": true,
+  "entrada": {
+    "shape": [
+      30,
+      1629
+    ],
+    "y_isotropica": "y multiplicada por alto/ancho del video (misma unidad que x)",
+    "bloques_features": {
+      "pose": [
+        0,
+        99
+      ],
+      "rostro": [
+        99,
+        1503
+      ],
+      "mano_izquierda": [
+        1503,
+        1566
+      ],
+      "mano_derecha": [
+        1566,
+        1629
+      ]
+    }
+  },
+  "seleccion": {
+    "pose": [
+      0,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "rostro": {
+      "nariz": [
+        1
+      ],
+      "ojos": [
+        33,
+        133,
+        159,
+        145,
+        362,
+        263,
+        386,
+        374
+      ],
+      "cejas": [
+        70,
+        63,
+        105,
+        66,
+        107,
+        336,
+        296,
+        334,
+        293,
+        300
+      ],
+      "boca": [
+        61,
+        291,
+        13,
+        14,
+        78,
+        308,
+        0,
+        17
+      ]
+    },
+    "mano_izquierda": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "mano_derecha": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "n_landmarks": 76,
+  "indices_landmarks_543": [
+    0,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    34,
+    66,
+    166,
+    192,
+    178,
+    395,
+    296,
+    419,
+    407,
+    103,
+    96,
+    138,
+    99,
+    140,
+    369,
+    329,
+    367,
+    326,
+    333,
+    94,
+    324,
+    46,
+    47,
+    111,
+    341,
+    33,
+    50,
+    501,
+    502,
+    503,
+    504,
+    505,
+    506,
+    507,
+    508,
+    509,
+    510,
+    511,
+    512,
+    513,
+    514,
+    515,
+    516,
+    517,
+    518,
+    519,
+    520,
+    521,
+    522,
+    523,
+    524,
+    525,
+    526,
+    527,
+    528,
+    529,
+    530,
+    531,
+    532,
+    533,
+    534,
+    535,
+    536,
+    537,
+    538,
+    539,
+    540,
+    541,
+    542
+  ],
+  "nombres_landmarks": [
+    "pose_nariz",
+    "pose_hombro_izq",
+    "pose_hombro_der",
+    "pose_codo_izq",
+    "pose_codo_der",
+    "pose_muneca_izq",
+    "pose_muneca_der",
+    "rostro_nariz_1",
+    "rostro_ojos_33",
+    "rostro_ojos_133",
+    "rostro_ojos_159",
+    "rostro_ojos_145",
+    "rostro_ojos_362",
+    "rostro_ojos_263",
+    "rostro_ojos_386",
+    "rostro_ojos_374",
+    "rostro_cejas_70",
+    "rostro_cejas_63",
+    "rostro_cejas_105",
+    "rostro_cejas_66",
+    "rostro_cejas_107",
+    "rostro_cejas_336",
+    "rostro_cejas_296",
+    "rostro_cejas_334",
+    "rostro_cejas_293",
+    "rostro_cejas_300",
+    "rostro_boca_61",
+    "rostro_boca_291",
+    "rostro_boca_13",
+    "rostro_boca_14",
+    "rostro_boca_78",
+    "rostro_boca_308",
+    "rostro_boca_0",
+    "rostro_boca_17",
+    "mano_izq_0",
+    "mano_izq_1",
+    "mano_izq_2",
+    "mano_izq_3",
+    "mano_izq_4",
+    "mano_izq_5",
+    "mano_izq_6",
+    "mano_izq_7",
+    "mano_izq_8",
+    "mano_izq_9",
+    "mano_izq_10",
+    "mano_izq_11",
+    "mano_izq_12",
+    "mano_izq_13",
+    "mano_izq_14",
+    "mano_izq_15",
+    "mano_izq_16",
+    "mano_izq_17",
+    "mano_izq_18",
+    "mano_izq_19",
+    "mano_izq_20",
+    "mano_der_0",
+    "mano_der_1",
+    "mano_der_2",
+    "mano_der_3",
+    "mano_der_4",
+    "mano_der_5",
+    "mano_der_6",
+    "mano_der_7",
+    "mano_der_8",
+    "mano_der_9",
+    "mano_der_10",
+    "mano_der_11",
+    "mano_der_12",
+    "mano_der_13",
+    "mano_der_14",
+    "mano_der_15",
+    "mano_der_16",
+    "mano_der_17",
+    "mano_der_18",
+    "mano_der_19",
+    "mano_der_20"
+  ],
+  "bloques_seleccion": {
+    "pose": [
+      0,
+      7
+    ],
+    "rostro": [
+      7,
+      34
+    ],
+    "mano_izquierda": [
+      34,
+      55
+    ],
+    "mano_derecha": [
+      55,
+      76
+    ]
+  },
+  "normalizacion": {
+    "metodo": "centro y escala de hombros, por frame",
+    "hombros_pose": [
+      11,
+      12
+    ],
+    "centro": "(hombro_izq + hombro_der) / 2",
+    "escala": "distancia euclidiana 2D (x, y) entre hombros",
+    "x_y": "(coord - centro) / escala en todos los bloques",
+    "z_centrada_y_escalada": [
+      "pose"
+    ],
+    "z_solo_escalada": [
+      "rostro",
+      "mano_izquierda",
+      "mano_derecha"
+    ],
+    "umbral_deteccion": 1e-06,
+    "escala_minima": 0.0001,
+    "respaldo": "mediana de los frames válidos de la secuencia; sin frames válidos: centro=0, escala=1",
+    "clip": [
+      -5.0,
+      5.0
+    ],
+    "no_detectados": "permanecen en 0.0"
+  },
+  "velocidad": "vel[t] = x[t] - x[t-1]; vel[0] = 0; 0 si el landmark falta en t o en t-1",
+  "forma_local_manos": {
+    "manos": [
+      "mano_izquierda",
+      "mano_derecha"
+    ],
+    "landmarks": "1..20 de cada mano, (x, y, z) relativos a la muñeca (landmark 0)",
+    "escala": "norma 3D(landmark_9 - landmark_0)",
+    "respaldo": "mediana de los frames válidos de esa mano; sin frames válidos: 1.0",
+    "clip": [
+      -5.0,
+      5.0
+    ],
+    "no_detectada": "60 valores en 0.0"
+  },
+  "salida": {
+    "shape": [
+      30,
+      576
+    ],
+    "orden": [
+      "coords_global (228: lm0_x, lm0_y, lm0_z, lm1_x, ...)",
+      "velocidad_global (228, mismo orden)",
+      "forma_local_manos (120: mano izq lm1..20 x,y,z | mano der lm1..20 x,y,z)"
+    ]
+  }
+}
