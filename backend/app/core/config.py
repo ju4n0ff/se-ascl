@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     max_body_bytes: int = Field(default=5 * 1024 * 1024, ge=1024)
     rate_limit_login_per_min: int = Field(default=5, ge=1)
     rate_limit_register_per_min: int = Field(default=3, ge=1)
+    rate_limit_profile_per_min: int = Field(default=5, ge=1)
     rate_limit_recognize_per_min: int = Field(default=30, ge=1)
     ws_max_message_bytes: int = Field(default=48 * 1024, ge=8 * 1024)
     ws_max_connections_per_ip: int = Field(default=5, ge=1)

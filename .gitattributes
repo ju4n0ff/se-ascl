@@ -1,0 +1,8 @@
+# Paridad byte a byte (SHA-256) entre conversor/ y sus copias en backend/: siempre LF, aunque
+# core.autocrlf=true. Las reglas cubren ambos lados; con uno solo, el otro quedaría en CRLF.
+backend/app/ml/features_lsch.py            text eol=lf
+backend/models/etiquetas_lsch.json         text eol=lf
+backend/models/config_features.json        text eol=lf
+conversor/features_lsch.py                 text eol=lf
+conversor/modelos/etiquetas_lsch.json      text eol=lf
+conversor/modelos/config_features.json     text eol=lf

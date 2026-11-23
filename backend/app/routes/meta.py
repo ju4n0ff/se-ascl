@@ -7,7 +7,6 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
 
 from app.db import session as db_session
 from app.ml.predictor import LSChPredictor
@@ -21,12 +20,8 @@ DB_TIMEOUT_S = 3.0
 
 
 async def _db_ok() -> bool:
-    async def _ping() -> None:
-        async with db_session.engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-
     try:
-        await asyncio.wait_for(_ping(), timeout=DB_TIMEOUT_S)
+        await asyncio.wait_for(db_session.ping(), timeout=DB_TIMEOUT_S)
         return True
     except Exception:
         logger.exception("Healthcheck: PostgreSQL no responde")

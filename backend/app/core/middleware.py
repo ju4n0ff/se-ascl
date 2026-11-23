@@ -17,7 +17,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 request_id_ctx: ContextVar[str] = ContextVar("request_id", default="-")
 
-PREFIJOS_NO_STORE = ("/api/auth", "/api/history")
+PREFIJOS_NO_STORE = ("/api/auth", "/api/history", "/api/users")
 RUTAS_DOCS = ("/docs", "/redoc")
 
 
