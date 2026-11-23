@@ -1,0 +1,140 @@
+<div class="encabezado">
+  <div>
+    <h1>Historial de traducciones</h1>
+    <p class="suave">
+      Tus últimas 50 traducciones guardadas. Puedes corregir el texto o borrarlas.
+    </p>
+  </div>
+  @if (historial.estado() === 'ready') {
+    <button type="button" class="boton secundario" (click)="historial.cargar()">Actualizar</button>
+  }
+</div>
+
+@if (historial.estado() === 'ready') {
+  <ul class="lista">
+    @for (e of historial.entradas(); track e.id) {
+      <li class="tarjeta" [attr.aria-busy]="historial.ocupada() === e.id">
+        @if (editando() === e.id) {
+          <form [formGroup]="form" (ngSubmit)="guardar(e)" novalidate>
+            <label [for]="'texto-' + e.id">Corregir traducción</label>
+            <textarea
+              [id]="'texto-' + e.id"
+              rows="2"
+              formControlName="texto"
+              (keydown.escape)="cancelarEdicion()"
+            ></textarea>
+            @if (texto.invalid) {
+              <p class="error-campo">
+                @if (texto.hasError('vacio')) {
+                  El texto no puede quedar vacío.
+                } @else if (texto.hasError('largo')) {
+                  El texto admite hasta {{ maximo }} caracteres.
+                } @else {
+                  El texto contiene caracteres no permitidos.
+                }
+              </p>
+            }
+            @if (errorEdicion()) {
+              <p class="alerta" role="alert">{{ errorEdicion() }}</p>
+            }
+            <div class="acciones">
+              <button
+                type="submit"
+                class="boton"
+                [disabled]="texto.invalid || historial.ocupada() === e.id"
+              >
+                {{ historial.ocupada() === e.id ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <button type="button" class="boton secundario" (click)="cancelarEdicion()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        } @else {
+          <p class="traduccion">{{ e.spanish_text }}</p>
+          <dl>
+            <div>
+              <dt>Etiqueta original</dt>
+              <dd>
+                <code>{{ e.predicted_label }}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Confianza</dt>
+              <dd>{{ e.confidence | percent: '1.0-0' }}</dd>
+            </div>
+            <div>
+              <dt>Tipo</dt>
+              <dd>{{ e.mode === 'dynamic' ? 'Seña en movimiento' : 'Seña estática' }}</dd>
+            </div>
+            <div>
+              <dt>Fecha</dt>
+              <dd>
+                <time [attr.datetime]="e.created_at">{{
+                  e.created_at | date: 'd MMM y, HH:mm'
+                }}</time>
+              </dd>
+            </div>
+          </dl>
+          @if (confirmando() === e.id) {
+            <div class="confirmar" role="alert">
+              <span>¿Eliminar esta traducción? No se puede deshacer.</span>
+              <button
+                type="button"
+                class="boton peligro"
+                [disabled]="historial.ocupada() === e.id"
+                (click)="eliminar(e)"
+              >
+                {{ historial.ocupada() === e.id ? 'Eliminando…' : 'Sí, eliminar' }}
+              </button>
+              <button type="button" class="boton secundario" (click)="confirmando.set(null)">
+                Cancelar
+              </button>
+            </div>
+          } @else {
+            <div class="acciones">
+              @if (voz.disponible) {
+                <button
+                  type="button"
+                  class="boton secundario"
+                  [attr.aria-label]="'Escuchar: ' + e.spanish_text"
+                  (click)="voz.hablar(e.spanish_text)"
+                >
+                  Escuchar
+                </button>
+              }
+              <button
+                type="button"
+                class="boton secundario"
+                [attr.aria-label]="'Corregir: ' + e.spanish_text"
+                (click)="editar(e)"
+              >
+                Corregir
+              </button>
+              <button
+                type="button"
+                class="boton secundario peligro-suave"
+                [attr.aria-label]="'Eliminar: ' + e.spanish_text"
+                (click)="confirmando.set(e.id)"
+              >
+                Eliminar
+              </button>
+            </div>
+          }
+        }
+      </li>
+    }
+  </ul>
+} @else {
+  <app-estado-vista
+    [estado]="historial.estado()"
+    [mensaje]="
+      historial.estado() === 'error'
+        ? historial.mensajeError()
+        : 'Aún no tienes traducciones guardadas. Activa «Guardar en mi historial» en el traductor y haz tu primera seña.'
+    "
+    (reintentar)="historial.cargar()"
+  >
+    <a routerLink="/" class="boton">Ir al traductor</a>
+  </app-estado-vista>
+}

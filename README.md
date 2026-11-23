@@ -28,10 +28,26 @@ pip install -r requirements.txt
 
 El detalle (PostgreSQL en WSL, variables, endpoints y tests) está en [backend/README.md](./backend/README.md).
 
+## Arranque del frontend (Angular)
+
+Requiere Node.js 24 o superior y el back-end corriendo en `http://127.0.0.1:8000` con
+`ALLOWED_ORIGINS=http://localhost:4200` (valor por defecto). En otra terminal:
+
+```powershell
+cd frontend
+npm install
+npm start
+```
+
+Abrir `http://localhost:4200` (con `localhost`, no `127.0.0.1`: es el origen permitido). El video se
+procesa en el navegador y nunca se envía. Pruebas, decisiones y despliegue en Vercel:
+[frontend/README.md](./frontend/README.md).
+
 ## Documentación del Hito 2
 
 *   [Guía del back-end: instalación, endpoints y tests](./backend/README.md)
 *   [Seguridad: controles OWASP y limitaciones](./backend/SECURITY.md)
+*   [Despliegue en Supabase + Render](./backend/README.md#despliegue-en-supabase--render) e [integración con Angular en Vercel](./backend/README.md#integración-con-frontend-angular-en-vercel)
 *   [Colección Postman](./backend/postman_collection.json)
 *   [Esquema](./backend/db/schema.sql), [datos de prueba](./backend/db/seed.sql) y [modelo de datos (Mermaid)](./backend/db/modelo_datos.mmd)
 *   [Especificación del modelo ML v3](./README_ML.md)

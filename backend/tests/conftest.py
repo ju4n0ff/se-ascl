@@ -4,12 +4,14 @@ Aislamiento de datos (obligatorio):
 * La base se toma de ``TEST_DATABASE_URL`` (por defecto ``signia_test`` en WSL) y se
   inyecta como ``DATABASE_URL`` **antes** de importar la app; las variables de
   entorno tienen prioridad sobre ``backend/.env``, que nunca se lee aquí.
-* Si el nombre de la base no termina en ``_test`` la sesión se aborta.
+* Si el nombre de la base no termina en ``_test``, o el servidor no es local, la sesión
+  se aborta: la suite trunca tablas y nunca debe correr contra Supabase.
 * Antes de cada test se truncan ``history`` y ``users`` y se reinician el rate
   limiter y el registro de conexiones WebSocket.
 """
 from __future__ import annotations
 
+import ipaddress
 import os
 
 from sqlalchemy.engine import make_url
@@ -24,6 +26,22 @@ if not (_url.database or "").endswith("_test"):
         f"TEST_DATABASE_URL debe apuntar a una base que termine en '_test' (llegó {_url.database!r})"
     )
 
+
+def es_servidor_local(url) -> bool:
+    """localhost o IP privada/loopback (WSL). ``?host=`` también define el destino en asyncpg."""
+    if "host" in url.query or url.port == 6543:
+        return False
+    if url.host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(url.host or "").is_private
+    except ValueError:
+        return False
+
+
+if not es_servidor_local(_url):
+    raise RuntimeError("TEST_DATABASE_URL debe apuntar a un PostgreSQL local (nunca a Supabase)")
+
 TEST_SECRET_KEY = "pytest-" + "k3y-S1gn1A-" * 6  # >= 32 caracteres y variada; solo para tests
 
 # Configuración determinista: no depende de lo que tenga backend/.env.
@@ -32,17 +50,26 @@ ENV_TESTS = {
     "DATABASE_URL_SYNC": _url.set(drivername="postgresql+psycopg2").render_as_string(
         hide_password=False
     ),
+    "DB_SSL": "false",
+    "DB_SSL_ROOT_CERT": "",
+    "DB_USE_PGBOUNCER": "false",
+    "DB_POOL_SIZE": "5",
+    "DB_MAX_OVERFLOW": "5",
+    "DB_POOL_RECYCLE_S": "300",
     "SECRET_KEY": TEST_SECRET_KEY,
     "ALGORITHM": "HS256",
     "ACCESS_TOKEN_EXPIRE_MINUTES": "60",
     "DEBUG": "true",
     "ALLOWED_ORIGINS": "http://localhost:4200",
+    "ALLOWED_ORIGIN_REGEX": "",
+    "TRUST_PROXY_HOPS": "0",
     "DYNAMIC_MODEL_PATH": "models/mejor_modelo_lsch.keras",
     "LABELS_PATH": "models/etiquetas_lsch.json",
     "FEATURES_CONFIG_PATH": "models/config_features.json",
     "STATIC_MODEL_PATH": "models/static_svm.joblib",
     "UMBRAL_CONFIANZA": "0.55",
     "MAX_CONCURRENT_INFERENCES": "2",
+    "MAX_CONCURRENT_HASHES": "2",
     "MAX_BODY_BYTES": str(5 * 1024 * 1024),
     "RATE_LIMIT_LOGIN_PER_MIN": "5",
     "RATE_LIMIT_REGISTER_PER_MIN": "3",

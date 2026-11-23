@@ -1,0 +1,36 @@
+.columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+h2 {
+  margin-top: 0;
+}
+h3 {
+  margin: 1.1rem 0 0.35rem;
+  font-size: 1.05rem;
+}
+ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.zona-peligro {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid #f0c4bc;
+  background: var(--coral-suave);
+}
+.zona-peligro h3 {
+  margin-top: 0;
+}
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.casilla input {
+  width: 1.2rem;
+  height: 1.2rem;
+}

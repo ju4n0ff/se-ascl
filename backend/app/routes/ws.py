@@ -32,7 +32,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.core.config import get_settings
-from app.core.rate_limit import ip_cliente
+from app.core.network import obtener_ip_cliente
 from app.core.security import usuario_desde_token
 from app.db import session as db_session
 from app.ml.predictor import N_FEATURES_RAW, LSChPredictor, campos_history
@@ -131,7 +131,7 @@ def origen_permitido(origen: str | None) -> bool:
     if origen is None:
         # Clientes no navegador (scripts, Postman) no envían Origin: solo en DEBUG.
         return settings.debug
-    return origen.rstrip("/") in settings.origins
+    return settings.origen_en_lista_blanca(origen.rstrip("/"))
 
 
 def _validar_frame(arr: np.ndarray) -> np.ndarray:
@@ -266,7 +266,7 @@ async def ws_recognize(websocket: WebSocket) -> None:
     if not origen_permitido(websocket.headers.get("origin")):
         await websocket.close(code=CLOSE_POLICY_VIOLATION, reason="Origin no permitido")
         return
-    ip = ip_cliente(websocket)
+    ip = obtener_ip_cliente(websocket)
     if not conexiones_ws.adquirir(ip, settings.ws_max_connections_per_ip):
         await websocket.close(code=CLOSE_POLICY_VIOLATION, reason="Demasiadas conexiones")
         return
