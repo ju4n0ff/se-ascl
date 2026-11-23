@@ -5,8 +5,8 @@
 * ``reset()`` limpia el estado (usado por los tests entre casos).
 * Es por proceso: con varios workers de uvicorn cada uno lleva su propia cuenta.
 
-La IP se toma de la conexión TCP (``request.client.host``); no se confía en
-``X-Forwarded-For`` porque el cliente puede falsificarlo.
+La IP sale de ``core.network.obtener_ip_cliente``: ``X-Forwarded-For`` solo se usa con
+``TRUST_PROXY_HOPS > 0`` y contando saltos desde la derecha.
 """
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from collections.abc import Callable
 from fastapi import HTTPException, Request, status
 
 from app.core.config import get_settings
+from app.core.network import obtener_ip_cliente
 
 VENTANA_S = 60.0
 
@@ -69,17 +70,12 @@ class RateLimiter:
 rate_limiter = RateLimiter()
 
 
-def ip_cliente(request_o_ws) -> str:
-    cliente = getattr(request_o_ws, "client", None)
-    return cliente.host if cliente and cliente.host else "desconocida"
-
-
 def limitar(ambito: str, campo_limite: str) -> Callable:
     """Dependencia FastAPI: ``ambito`` agrupa la cuenta, ``campo_limite`` es un campo de Settings."""
 
     async def _dependencia(request: Request) -> None:
         limite = int(getattr(get_settings(), campo_limite))
-        permitido, reintento = rate_limiter.hit(f"{ambito}:{ip_cliente(request)}", limite)
+        permitido, reintento = rate_limiter.hit(f"{ambito}:{obtener_ip_cliente(request)}", limite)
         if not permitido:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,

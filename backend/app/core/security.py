@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from typing import TypeVar
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -23,6 +26,12 @@ CLAIMS_REQUERIDOS = ["sub", "exp", "iat", "jti", "type"]
 
 # Argon2id (variante por defecto de argon2-cffi) con los parámetros recomendados por pwdlib.
 _hasher = PasswordHash((Argon2Hasher(),))
+# Pool propio: con el executor por defecto, una ráfaga de logins correría un hash por hilo
+# (64 MiB cada uno) y podría agotar la RAM de una instancia de 512 MB.
+_pool_hash = ThreadPoolExecutor(
+    max_workers=get_settings().max_concurrent_hashes, thread_name_prefix="argon2"
+)
+T = TypeVar("T")
 # Hash de referencia para igualar el tiempo de respuesta cuando el usuario no existe.
 _HASH_DUMMY = _hasher.hash(uuid.uuid4().hex)
 
@@ -50,15 +59,19 @@ def verify_dummy(plain: str) -> None:
     _hasher.verify(plain, _HASH_DUMMY)
 
 
+async def _en_pool_hash(fn: Callable[..., T], *args: str) -> T:
+    return await asyncio.get_running_loop().run_in_executor(_pool_hash, fn, *args)
+
+
 async def hash_password_async(password: str) -> str:
-    return await asyncio.to_thread(hash_password, password)
+    return await _en_pool_hash(hash_password, password)
 
 
 async def verify_password_async(plain: str, hashed: str | None) -> bool:
     if hashed is None:
-        await asyncio.to_thread(verify_dummy, plain)
+        await _en_pool_hash(verify_dummy, plain)
         return False
-    return await asyncio.to_thread(verify_password, plain, hashed)
+    return await _en_pool_hash(verify_password, plain, hashed)
 
 
 # ------------------------------------------------------------------------- JWT

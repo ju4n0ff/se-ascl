@@ -1,0 +1,62 @@
+# Blueprint de Render: API FastAPI + TensorFlow (CPU). Guía: backend/README.md
+# Los valores "sync: false" se escriben en el dashboard; nunca en este archivo.
+services:
+  - type: web
+    name: senacl-api
+    runtime: python
+    # free = 512 MB y 0.1 CPU, sin costo: sirve para validar el despliegue. Medido (Windows,
+    # tensorflow 2.16.2): ~410 MiB en reposo y ~472 MiB de pico. Para uso real, "standard" (2 GB).
+    plan: free
+    # Elegir la región más cercana al proyecto de Supabase (no se puede cambiar después).
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    # --no-proxy-headers: Render define FORWARDED_ALLOW_IPS=* y uvicorn tomaría como IP la
+    # primera entrada de X-Forwarded-For, que el cliente puede falsificar. La IP real la
+    # calcula app/core/network.py con TRUST_PROXY_HOPS.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --ws-max-size 49152 --no-proxy-headers --no-server-header
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      # Un solo proceso: el modelo, el rate limiter y los contadores WS viven en memoria.
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: FORWARDED_ALLOW_IPS
+        value: 127.0.0.1
+
+      # --- Secretos y valores propios (dashboard) ---
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+      # --- Aplicación ---
+      - key: DEBUG
+        value: "false"
+      - key: ALGORITHM
+        value: HS256
+      # Cantidad de entradas de X-Forwarded-For que agrega la infraestructura. 1 es el valor
+      # conservador (no falsificable); confirmarlo con el log antes de subirlo. Ver README.
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: DB_SSL
+        value: "true"
+      - key: DB_USE_PGBOUNCER
+        value: "true"
+
+      # --- RAM y CPU (512 MB) ---
+      - key: MAX_CONCURRENT_INFERENCES
+        value: "1"
+      - key: MAX_CONCURRENT_HASHES
+        value: "1"
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: TF_NUM_INTRAOP_THREADS
+        value: "1"
+      - key: TF_NUM_INTEROP_THREADS
+        value: "1"

@@ -32,6 +32,7 @@ El detalle (PostgreSQL en WSL, variables, endpoints y tests) está en [backend/R
 
 *   [Guía del back-end: instalación, endpoints y tests](./backend/README.md)
 *   [Seguridad: controles OWASP y limitaciones](./backend/SECURITY.md)
+*   [Despliegue en Supabase + Render](./backend/README.md#despliegue-en-supabase--render) e [integración con Angular en Vercel](./backend/README.md#integración-con-frontend-angular-en-vercel)
 *   [Colección Postman](./backend/postman_collection.json)
 *   [Esquema](./backend/db/schema.sql), [datos de prueba](./backend/db/seed.sql) y [modelo de datos (Mermaid)](./backend/db/modelo_datos.mmd)
 *   [Especificación del modelo ML v3](./README_ML.md)

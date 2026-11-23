@@ -4,7 +4,7 @@
 
 - Python 3.11+
 - PostgreSQL 14+
-- TensorFlow 2.16.2 + Keras 3.15.1 (modelo LSCh v3, CPU)
+- TensorFlow 2.16.2 + Keras 3.15.1 (modelo LSCh v3, CPU). En Linux x86_64 `requirements.txt` instala `tensorflow-cpu`.
 
 ## Instalación
 
@@ -31,7 +31,13 @@ Editar `.env` con tus credenciales de PostgreSQL. Variables clave:
 |----------|-------------|
 | `DEBUG` | `false` por defecto. Con `false`: sin `/docs`, HSTS activo, WS exige `Origin` y el arranque falla si `SECRET_KEY` es débil. |
 | `SECRET_KEY` | Mínimo 32 caracteres aleatorios. Generar con `python -c "import secrets; print(secrets.token_urlsafe(64))"`. |
-| `ALLOWED_ORIGINS` | Orígenes permitidos para CORS y para el `Origin` del WebSocket, separados por comas (sin `*`). |
+| `ALLOWED_ORIGINS` | Orígenes permitidos para CORS y para el `Origin` del WebSocket, separados por comas (sin `*`). Con `DEBUG=false` se exige `https://`, salvo loopback. |
+| `ALLOWED_ORIGIN_REGEX` | Opcional, vacío por defecto. Patrón cerrado para previews de Vercel. |
+| `DB_SSL`, `DB_USE_PGBOUNCER` | Vacío = automático según `DATABASE_URL`; `true`/`false` siempre gana. |
+| `DB_SSL_ROOT_CERT` | Opcional. CA para verificar el certificado de la base (sin ella, `DB_SSL` cifra pero no autentica). |
+| `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_RECYCLE_S` | Pool de conexiones (5, 5, 300 s). |
+| `TRUST_PROXY_HOPS` | Proxies confiables (0–5). `0` ignora `X-Forwarded-For`. |
+| `MAX_CONCURRENT_INFERENCES`, `MAX_CONCURRENT_HASHES` | Topes de inferencias y de hashes Argon2id simultáneos. |
 | `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` | Artefactos del modelo v3 (relativos a `backend/`). |
 | `MAX_BODY_BYTES`, `RATE_LIMIT_*`, `WS_*` | Límites anti-DoS (ver `.env.example` y `SECURITY.md`). |
 
@@ -60,10 +66,10 @@ exporta a SVG/PNG con `mmdc` o en https://mermaid.live).
 ## Levantar el servidor
 
 ```powershell
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152 --no-proxy-headers
 ```
 
-`--ws-max-size` aplica el tope de 48 KB por mensaje WebSocket también a nivel de protocolo
+`--no-proxy-headers` evita que uvicorn reescriba la IP con `X-Forwarded-For`; `--ws-max-size` aplica el tope de 48 KB por mensaje WebSocket también a nivel de protocolo
 (`python -m app.main` ya lo configura). Documentación interactiva (solo con `DEBUG=true`):
 http://localhost:8000/docs (botón **Authorize** para pegar el JWT).
 
@@ -200,11 +206,111 @@ más `origen` y `aviso`), `{"type": "descartado", "motivo": "ruido", ...}` y `{"
 Las rutas se configuran con `DYNAMIC_MODEL_PATH`, `LABELS_PATH`, `FEATURES_CONFIG_PATH` y
 `STATIC_MODEL_PATH` (relativas a `backend/`).
 
+## Despliegue en Supabase + Render
+
+### 1. Supabase
+
+1. Crear el proyecto en una región cercana a la de Render y guardar la contraseña de la base fuera del repo.
+2. **Connect** → copiar la URL del **Transaction pooler** (puerto `6543`) o del **Session pooler** (`5432`).
+   Ambos son IPv4. La conexión directa (`db.<ref>.supabase.co`) es IPv6 y no sirve desde Render.
+
+   ```
+   postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-[N]-[REGION].pooler.supabase.com:6543/postgres
+   ```
+
+   Copiar el host tal cual (el índice `aws-N` no se deduce de la región) y codificar los caracteres
+   especiales de la contraseña (`@` = `%40`, `#` = `%23`).
+3. Crear las tablas y activar RLS, en el SQL Editor o con `psql`, **en este orden**:
+
+   ```bash
+   psql "<URL del pooler>" -1 -v ON_ERROR_STOP=1 -f db/schema.sql         # ¡borra las tablas si ya existen!
+   psql "<URL del pooler>" -1 -v ON_ERROR_STOP=1 -f db/supabase_rls.sql   # idempotente
+   ```
+
+   `schema.sql` empieza con `DROP TABLE`: ejecutarlo solo al crear el proyecto. Si se vuelve a
+   ejecutar se pierden los datos **y** el RLS. No cargar `seed.sql` (contraseña conocida).
+4. Verificar que la consulta final de `supabase_rls.sql` muestre `rls = true` en `users` e `history`, y
+   que el Security Advisor no reporte tablas sin RLS. Conviene además desactivar la Data API
+   (Project Settings → Data API): este proyecto no la usa.
+
+El backend adapta la URL solo: driver `asyncpg`, SSL, y para el pooler `statement_cache_size=0`,
+`prepared_statement_cache_size=0` y nombres de sentencia únicos. `DB_SSL=true` cifra sin autenticar al
+servidor; para verificar el certificado, descargar la CA (Database Settings → SSL), subirla a Render
+como *Secret File* y definir `DB_SSL_ROOT_CERT=/etc/secrets/prod-ca-2021.crt`.
+
+### 2. Render
+
+1. **New → Blueprint**, elegir el repositorio y la rama. Render lee `render.yaml` de la raíz.
+2. Completar los valores pedidos: `DATABASE_URL` (pooler), `SECRET_KEY`
+   (`python -c "import secrets; print(secrets.token_urlsafe(64))"`) y `ALLOWED_ORIGINS` (URL de Vercel).
+3. Esperar el build y comprobar `https://<servicio>.onrender.com/api/health` → `200`, `"database": "ok"`.
+
+El modelo `.keras` (11 MB) está en Git normal, sin LFS: se clona sin pasos extra. Con Supabase caído
+`/api/health` responde `503` y Render puede reiniciar o retirar la instancia.
+
+**`TRUST_PROXY_HOPS` (revisar tras el primer despliegue).** Es la cantidad de entradas que la
+infraestructura agrega al final de `X-Forwarded-For`. El Blueprint usa `1`, el valor conservador: no es
+falsificable, pero si Render agrega más saltos todos los clientes comparten un mismo cupo (5 logins/min
+y 5 WebSockets **en total**). Render no documenta el número; reportes de terceros de noviembre de 2026
+describen `cliente, Cloudflare, interno` (valor `3`). Para confirmarlo:
+
+1. Hacer un intento de login desde fuera y buscar en los logs `TRUST_PROXY_HOPS=1 resuelve a una IP
+   interna (X-Forwarded-For trae N entradas)`. Sin enviar esa cabecera, `N` es el número de saltos.
+2. Definir `TRUST_PROXY_HOPS=N` en el dashboard y redesplegar.
+3. Comprobar que no se puede evadir: 6 logins fallidos rotando `X-Forwarded-For` deben terminar en
+   `429`. Y que sí separa clientes: desde otra red (datos móviles) el login responde `401`, no `429`.
+
+Si el log no aparece, la entrada tomada ya es pública: validar igual el paso 3 (podría ser la IP de
+Cloudflare y no la del cliente). Un valor mayor al real permite falsificar la IP.
+
+**RAM.** Medido en un proceso con 1 hilo de TF y `MAX_CONCURRENT_INFERENCES=1` (Windows, TensorFlow
+2.16.2; Linux con `tensorflow-cpu` puede variar y debe confirmarse en Render → Metrics):
+
+| Situación | RAM del proceso |
+|---|---|
+| Modelo cargado, en reposo y con inferencias normales | ~410 MiB |
+| 5 inferencias simultáneas de 600 frames | ~434 MiB (pico) |
+| 10 logins simultáneos, `MAX_CONCURRENT_HASHES=1` | ~472 MiB (pico) |
+| 10 logins simultáneos, `MAX_CONCURRENT_HASHES=2` | ~537 MiB (pico) |
+| 10 logins simultáneos, 8 hashes a la vez | ~924 MiB (pico) |
+
+Free y Starter (512 MB) quedan con menos de 10 % de margen: sirven para una demo. Para uso real,
+**Standard (2 GB)**. Los parámetros de Argon2id (m=64 MiB) no se bajan: se limita la concurrencia. El
+plan Free además suspende el servicio por inactividad y la primera petición tarda en recargar el modelo.
+
+## Integración con Frontend Angular en Vercel
+
+```ts
+// src/environments/environment.prod.ts
+export const environment = {
+  production: true,
+  apiUrl: 'https://senacl-api.onrender.com',
+  wsUrl: 'wss://senacl-api.onrender.com/ws/recognize',
+};
+```
+
+- **Orígenes:** `ALLOWED_ORIGINS=https://senacl.vercel.app,https://www.senacl.cl` (sin barra final ni
+  ruta). La misma lista vale para CORS y para el `Origin` del WebSocket. Con `DEBUG=false` se rechaza
+  `http://`, salvo `localhost`, `127.0.0.1` y `[::1]` (para probar la config de producción en la propia
+  máquina). Al publicar el dominio definitivo, quitar los de loopback.
+- **Previews (opcional):** `ALLOWED_ORIGIN_REGEX=^https://senacl-[a-z0-9-]+-miequipo\.vercel\.app$`. El
+  arranque falla si el patrón es abierto. En `vercel.app` un tercero podría crear un proyecto con un
+  nombre que calce: usarlo solo en pruebas, o servir los previews en un dominio propio.
+- **HTTP:** `withCredentials: false`; el JWT va en `Authorization: Bearer`. Rutas sin barra final.
+- **WebSocket:** `wss://` (desde una página `https://` el navegador bloquea `ws://`). El JWT nunca va en
+  la URL: tras abrir, enviar `{"type": "auth", "token": "..."}`. Reconectar con espera creciente ante
+  `1001` (inactividad de 60 s o redespliegue); no insistir ante `1008`.
+- **Landmarks:** enviar `[x, y * (alto / ancho), z]` por punto, bloques ausentes en `0.0` exacto,
+  `refineFaceLandmarks=false`. El espejo de la cámara es **solo CSS** (`transform: scaleX(-1)` en el
+  `<video>`), nunca sobre los datos.
+- **Cámara:** `getUserMedia` exige `https://` (Vercel lo da) o `localhost`.
+- Un `500` inesperado sale sin cabeceras CORS: el navegador lo muestra como error de red (`status 0`).
+
 ## Tests y quality gates
 
 La suite (`tests/`) corre contra la base aislada **`signia_test`** (nunca `signia`): la URL sale de
 `TEST_DATABASE_URL` (por defecto `postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/signia_test`)
-y la sesión se aborta si el nombre de la base no termina en `_test`. Las tablas se truncan antes de
+y la sesión se aborta si el nombre de la base no termina en `_test` o si el servidor no es local (nunca Supabase). Las tablas se truncan antes de
 cada test y el rate limiter se reinicia. La configuración de los tests no depende de `backend/.env`.
 
 ```powershell
@@ -223,6 +329,7 @@ pytest backend/tests -v
 | `test_auth_history.py` | Health, Argon2id, historial y reglas de persistencia de `/api/recognize` |
 | `test_websocket.py` | Máquina de estados: modo auto, ruido descartado, modo manual, aislamiento y persistencia |
 | `test_config_prod.py` | Validación de `Settings`, app con `DEBUG=false` (subproceso), seed idempotente |
+| `test_cloud.py` | `DATABASE_URL`/SSL/pooler, IP tras el proxy, CORS y `Origin` de Vercel, RLS, `render.yaml`, guarda de base local |
 
 ## Seguridad
 

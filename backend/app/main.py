@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.exceptions import registrar_manejadores
 from app.core.logging_config import configurar_logging
 from app.core.middleware import BodySizeLimitMiddleware, SecurityHeadersMiddleware
@@ -37,6 +38,18 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+def opciones_cors(cfg: Settings) -> dict[str, Any]:
+    return {
+        "allow_origins": cfg.origins,
+        "allow_origin_regex": cfg.allowed_origin_regex or None,
+        "allow_credentials": False,  # JWT en header Authorization, sin cookies
+        "allow_methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Authorization", "Content-Type"],
+        "expose_headers": ["X-Request-ID", "Retry-After"],
+        "max_age": 600,
+    }
+
+
 # Superficie mínima en producción: sin Swagger, ReDoc ni openapi.json.
 _docs = {} if settings.debug else {"docs_url": None, "redoc_url": None, "openapi_url": None}
 
@@ -45,6 +58,9 @@ app = FastAPI(
     description="Traductor de Lengua de Señas Chilena — Backend (modelo LSCh v3)",
     version="2.0.0",
     lifespan=lifespan,
+    # Detrás del proxy TLS la app ve http://: un 307 por barra final apuntaría a http:// y un
+    # cliente podría reenviar el JWT sin cifrar. En producción esa ruta responde 404.
+    redirect_slashes=settings.debug,
     **_docs,
 )
 registrar_manejadores(app)
@@ -52,15 +68,7 @@ registrar_manejadores(app)
 # Orden: el último agregado es el más externo.
 #   SecurityHeaders (request_id + cabeceras) -> CORS -> límite de body -> app
 app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.max_body_bytes)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.origins,
-    allow_credentials=False,  # JWT en header Authorization, sin cookies
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
-    expose_headers=["X-Request-ID", "Retry-After"],
-    max_age=600,
-)
+app.add_middleware(CORSMiddleware, **opciones_cors(settings))
 app.add_middleware(SecurityHeadersMiddleware, debug=settings.debug)
 
 app.include_router(auth.router)
@@ -81,4 +89,5 @@ if __name__ == "__main__":
         reload=settings.debug,
         ws_max_size=settings.ws_max_message_bytes,
         server_header=False,
+        proxy_headers=False,  # X-Forwarded-For lo interpreta core/network.py
     )

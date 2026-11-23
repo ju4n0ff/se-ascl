@@ -20,7 +20,7 @@ y de cómo verificarlos. Configuración en `.env` (ver `.env.example`).
 
 | Control | Implementación |
 |---------|----------------|
-| Hashing | **Argon2id** con `pwdlib[argon2]` (m=64 MiB, t=3, p=4), ejecutado fuera del event loop (`asyncio.to_thread`). Se retiró `passlib`/bcrypt. Los hashes bcrypt antiguos nunca autentican. |
+| Hashing | **Argon2id** con `pwdlib[argon2]` (m=64 MiB, t=3, p=4), ejecutado fuera del event loop en un pool acotado (`MAX_CONCURRENT_HASHES`), para que una ráfaga de logins no agote la RAM. Se retiró `passlib`/bcrypt. Los hashes bcrypt antiguos nunca autentican. |
 | Política de contraseñas | `UserCreate` y `UserUpdate` (mismo tipo `PasswordFuerte`): 8–128 caracteres, al menos 1 mayúscula, 1 minúscula y 1 dígito. `EmailStr` (normalizado a minúsculas, máx. 100). Username `^[a-zA-Z0-9_.-]{3,50}$`. |
 | Cambio de email o contraseña | `PATCH /api/users/me` exige `current_password` (Argon2id en hilo) **antes** de tocar la base: un token robado no permite tomar la cuenta ni sondear emails. Error `401` genérico; email en uso, `409` genérico decidido por el `UNIQUE` de la base (sin condición de carrera). |
 | Login dedicado | `UserLogin` (`username` + `password`, con topes de largo). Caracteres de control en `username` (p. ej. NUL) responden `422` sin llegar a PostgreSQL. |
@@ -44,7 +44,7 @@ y de cómo verificarlos. Configuración en `.env` (ver `.env.example`).
 
 | Control | Código de cierre |
 |---------|------------------|
-| `Origin` en `ALLOWED_ORIGINS` (anti-CSWSH; sin `Origin` solo con `DEBUG=true`). Se rechaza antes del handshake. | `1008` (HTTP 403 en uvicorn) |
+| `Origin` en `ALLOWED_ORIGINS` o `ALLOWED_ORIGIN_REGEX` (anti-CSWSH, misma función que CORS; sin `Origin` solo con `DEBUG=true`). Se rechaza antes del handshake. | `1008` (HTTP 403 en uvicorn) |
 | Máximo 5 conexiones simultáneas por IP | `1008` |
 | Mensaje > 48 KB (`WS_MAX_MESSAGE_BYTES`; además `--ws-max-size` a nivel de protocolo) | `1009` |
 | Máximo 35 mensajes/s: los excedentes se descartan con un `error`; 5 ventanas seguidas excedidas cierran | `1008` |
@@ -58,12 +58,26 @@ Formato recomendado para el frontend: frames binarios `Float32Array` de 6516 byt
 
 | Control | Implementación |
 |---------|----------------|
-| CORS | Lista blanca desde `ALLOWED_ORIGINS` (se rechaza `*`), `allow_credentials=False` (el JWT va en header), métodos `GET/POST/PATCH/DELETE/OPTIONS` y headers `Authorization`, `Content-Type`. |
+| CORS | Lista blanca desde `ALLOWED_ORIGINS` (se rechaza `*`; con `DEBUG=false` se exige `https://` salvo loopback), `allow_credentials=False` (el JWT va en header), métodos `GET/POST/PATCH/DELETE/OPTIONS` y headers `Authorization`, `Content-Type`. |
 | Cabeceras | En todas las respuestas: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(self), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy`, `Content-Security-Policy: default-src 'none'` (excepto `/docs`) y `X-Request-ID`. `Cache-Control: no-store` en `/api/auth/*`, `/api/history/*` y `/api/users/*`. HSTS con `DEBUG=false`. |
 | Documentación | `/docs`, `/redoc` y `/openapi.json` deshabilitados con `DEBUG=false`. |
 | Errores | Manejador global: el cliente recibe `{"detail": "Error interno del servidor", "request_id": ...}`; el traceback queda solo en el log del servidor con el mismo `request_id`. |
+| Secretos en errores | `hide_input_in_errors=True` en `Settings` y errores de URL sin la URL: un arranque fallido no vuelca `DATABASE_URL` ni `SECRET_KEY`. |
+| Redirecciones | `redirect_slashes` apagado con `DEBUG=false`: detrás del proxy TLS el 307 apuntaría a `http://`. |
 | Logs SQL | `echo=False` en SQLAlchemy (no vuelca emails ni hashes). |
 | Seed | `python -m app.db.seed` se niega a correr con `DEBUG=false` (evita una cuenta con contraseña conocida en producción). |
+
+## Nube: Supabase, Render y Vercel
+
+| Control | Implementación |
+|---------|----------------|
+| RLS | `db/supabase_rls.sql` (idempotente): RLS en `users` e `history` sin políticas, permisos revocados a `anon` y `authenticated` (tablas, secuencias y privilegios por defecto). Evita fugas por PostgREST. El backend entra como `postgres`, que omite RLS: la autorización sigue en los repositorios. |
+| TLS a la base | `DB_SSL` por `connect_args`. `require` cifra sin autenticar; con `DB_SSL_ROOT_CERT` verifica cadena y hostname. `sslmode=verify-*` nunca se degrada. Desactivarlo hacia Supabase deja un aviso en el log. |
+| IP real | `core/network.py`: con `TRUST_PROXY_HOPS=N` toma la N-ésima entrada de `X-Forwarded-For` desde la derecha, validada con `ipaddress`; si falta o es inválida usa la conexión TCP. Con `0` ignora la cabecera. La comparten el rate limit y el tope de WebSockets. |
+| uvicorn | `--no-proxy-headers`: por defecto reescribe la IP con `X-Forwarded-For`, y con el `FORWARDED_ALLOW_IPS=*` de Render tomaría la entrada que escribe el cliente. Un test lo comprueba con los flags reales de `render.yaml`. |
+| Orígenes | `core/origins.py`: forma estricta `esquema://host[:puerto]`. `ALLOWED_ORIGIN_REGEX` usa una gramática cerrada (sin `.`, `\|`, grupos ni `*`), dominio literal y, en dominios compartidos, prefijo y sufijo literales. |
+| Secretos | `render.yaml` declara `DATABASE_URL`, `SECRET_KEY` y `ALLOWED_ORIGINS` con `sync: false`. Nunca subir `.env`, URLs con contraseña ni la `service_role` key. |
+| Tests | `conftest.py` aborta si la base no termina en `_test` o el servidor no es local. |
 
 ## Privacidad por diseño (cero persistencia biométrica)
 
@@ -83,8 +97,14 @@ Formato recomendado para el frontend: frames binarios `Float32Array` de 6516 byt
 
 - Rate limiting y contadores del WS son en memoria y por proceso: con varios workers o réplicas,
   usar un almacén compartido (p. ej. Redis) o limitar en el proxy.
-- La IP se toma de la conexión TCP. Detrás de un proxy inverso, configurarlo para que limite por IP
-  real; no se confía en `X-Forwarded-For`.
+- `TRUST_PROXY_HOPS` debe coincidir con la infraestructura real. Render no documenta cuántas entradas
+  agrega: un valor menor agrupa a todos los clientes en un mismo cupo (fácil de agotar por un atacante);
+  uno mayor permite falsificar la IP. Procedimiento de verificación en `README.md`.
+- El rate limit es por IP exacta: un cliente IPv6 puede rotar direcciones dentro de su /64.
+- `DB_SSL=true` sin `DB_SSL_ROOT_CERT` no autentica al servidor de base de datos.
+- `ALLOWED_ORIGIN_REGEX` sobre `vercel.app` puede calzar con el proyecto de un tercero; no usar en producción.
+- En modo Transaction, las sentencias preparadas con nombre único pueden quedar en el backend del pooler
+  hasta que este recicle la conexión. No se ha probado contra un PgBouncer/Supavisor real.
 - No hay revocación de JWT (lista de `jti`) ni refresh tokens; la expiración por defecto es 60 min.
   Cambiar la contraseña no invalida los tokens ya emitidos (borrar la cuenta sí: el usuario deja de existir).
 - `DELETE /api/users/me` no vuelve a pedir la contraseña (un `DELETE` no lleva cuerpo, RFC 9110): quien

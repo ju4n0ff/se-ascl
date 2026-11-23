@@ -11,6 +11,8 @@ pwdlib[argon2]==0.2.1
 email-validator==2.2.0
 scikit-learn==1.5.2
 numpy==1.26.4
-tensorflow==2.16.2
+# Linux x86_64 (Render): build solo CPU, wheel de 214 MB en vez de 591 MB. Mismas dependencias.
+tensorflow==2.16.2; sys_platform != "linux" or platform_machine != "x86_64"
+tensorflow-cpu==2.16.2; sys_platform == "linux" and platform_machine == "x86_64"
 keras==3.15.1
 joblib==1.4.2
