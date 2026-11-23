@@ -103,3 +103,8 @@ dataset/
 
 # Artefactos generados en entrenamiento (produccion vive en conversor/modelos/)
 entrenamiento/modelos/
+
+#carpetas adicionales sin proposito aun.
+apps/
+ml/
+requisitos/
