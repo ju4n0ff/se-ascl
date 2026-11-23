@@ -79,7 +79,8 @@ backend/models/*.json
 
 #mis carpetas
 requisitos/
-
+ml/
+apps/
 # Entornos virtuales y caché
 .venv/
 .venv_linux/
@@ -103,8 +104,3 @@ dataset/
 
 # Artefactos generados en entrenamiento (produccion vive en conversor/modelos/)
 entrenamiento/modelos/
-
-#carpetas adicionales sin proposito aun.
-apps/
-ml/
-requisitos/
