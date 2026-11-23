@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import or_, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rate_limit import limitar
@@ -13,6 +11,7 @@ from app.core.security import (
     verify_password_async,
 )
 from app.db.models import User
+from app.db.repositories import RegistroDuplicadoError, UserRepository
 from app.db.session import get_db
 from app.schemas.schemas import Token, UserCreate, UserLogin, UserResponse
 
@@ -33,21 +32,13 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> U
     # revela si el usuario o el email ya existían.
     password_hash = await hash_password_async(payload.password)
 
-    existente = await db.execute(
-        select(User.id).where(or_(User.username == payload.username, User.email == payload.email))
-    )
-    if existente.first() is not None:
+    repo = UserRepository(db)
+    if await repo.existe_username_o_email(payload.username, payload.email):
         raise HTTPException(status.HTTP_409_CONFLICT, MSG_REGISTRO_CONFLICTO)
-
-    user = User(username=payload.username, email=payload.email, password_hash=password_hash)
-    db.add(user)
     try:
-        await db.flush()
-    except IntegrityError as exc:  # carrera entre dos registros simultáneos
-        await db.rollback()
+        return await repo.crear(payload.username, payload.email, password_hash)
+    except RegistroDuplicadoError as exc:  # carrera entre dos registros simultáneos
         raise HTTPException(status.HTTP_409_CONFLICT, MSG_REGISTRO_CONFLICTO) from exc
-    await db.refresh(user)
-    return user
 
 
 @router.post(
@@ -56,8 +47,7 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> U
     dependencies=[Depends(limitar("login", "rate_limit_login_per_min"))],
 )
 async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)) -> Token:
-    resultado = await db.execute(select(User).where(User.username == payload.username))
-    user = resultado.scalar_one_or_none()
+    user = await UserRepository(db).por_username(payload.username)
 
     # Si el usuario no existe se verifica contra un hash dummy (mismo costo Argon2id).
     valido = await verify_password_async(payload.password, user.password_hash if user else None)

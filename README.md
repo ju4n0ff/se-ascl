@@ -7,6 +7,36 @@
 *   **Luis Jesús Urbina Garcidueñas** - [@UsuarioLuis](https://github.com/LuisU1138)
 *   **Juan Carlos Vega Graterol** - [@UsuarioJuan](https://github.com/ju4n0ff)
 
+## Instalación rápida (back-end, Hito 2)
+
+Requisitos: Python 3.11 y PostgreSQL 14+ (bases `signia` y, para los tests, `signia_test`).
+
+```powershell
+git clone https://github.com/ju4n0ff/se-ascl.git
+cd se-ascl
+copy .env.example backend\.env
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+1. Editar `backend/.env`: `DATABASE_URL`, `DATABASE_URL_SYNC` y `SECRET_KEY` (para la demo local, `DEBUG=true` habilita `/docs`).
+2. Crear la base: `createdb signia` y `psql -d signia -f db/schema.sql` (datos de prueba opcionales: `db/seed.sql`).
+3. Levantar el servidor: `uvicorn app.main:app --host 127.0.0.1 --port 8000 --ws-max-size 49152`.
+4. Verificar: `GET http://127.0.0.1:8000/api/health` responde `200` con `"status": "ok"`.
+
+El detalle (PostgreSQL en WSL, variables, endpoints y tests) está en [backend/README.md](./backend/README.md).
+
+## Documentación del Hito 2
+
+*   [Guía del back-end: instalación, endpoints y tests](./backend/README.md)
+*   [Seguridad: controles OWASP y limitaciones](./backend/SECURITY.md)
+*   [Colección Postman](./backend/postman_collection.json)
+*   [Esquema](./backend/db/schema.sql), [datos de prueba](./backend/db/seed.sql) y [modelo de datos (Mermaid)](./backend/db/modelo_datos.mmd)
+*   [Especificación del modelo ML v3](./README_ML.md)
+*   [Carpeta `docs/`](./docs/) ([documentos reemplazados](./docs/archivo/README.md))
+
 ## Entregables del Hito 1
 
 ### Prototipo Navegable

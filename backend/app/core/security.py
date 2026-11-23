@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import ALGORITMOS_JWT_PERMITIDOS, get_settings
 from app.db.models import User
+from app.db.repositories import UserRepository
 from app.db.session import get_db
 
 # Valor del claim "type" del JWT, no un secreto.
@@ -107,7 +108,7 @@ async def usuario_desde_token(token: str, db: AsyncSession) -> User | None:
         user_id = decode_access_token(token)
     except ValueError:
         return None
-    return await db.get(User, user_id)
+    return await UserRepository(db).por_id(user_id)
 
 
 async def get_current_user(

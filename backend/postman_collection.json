@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "SignIA API (LSCh v3)",
-    "description": "API del traductor de LSCh con modelo v3 y controles OWASP. Ejecutar en orden: Register -> Login (guarda {{token}}) -> el resto. Los frames de ejemplo se generan en el pre-request script (30 frames de 1629 floats sintéticos). El WebSocket /ws/recognize no cabe en el formato v2.1: ver backend/README.md. Postman no envía Origin, así que el WS solo lo acepta con DEBUG=true.",
+    "description": "API del traductor de LSCh con modelo v3 y controles OWASP. Ejecutar en orden: Register -> Login (guarda {{token}}) -> el resto. 'Mi historial' guarda {{entry_id}} con la entrada más reciente. 'Borrar mi cuenta' va al final: elimina demo_user y deja la colección lista para repetirse. Los frames de ejemplo se generan en el pre-request script (30 frames de 1629 floats sintéticos). El WebSocket /ws/recognize no cabe en el formato v2.1: ver backend/README.md. Postman no envía Origin, así que el WS solo lo acepta con DEBUG=true.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,11 +16,12 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// 30 frames x 1629 floats: manos con valores (bloques 1503..1628 != 0).",
+          "// 30 frames x 1629 floats sintéticos (no es una seña real): el modelo v3 los acepta (confianza > 0.55),",
+          "// así 'con historial' siempre crea una entrada para la demo de PATCH y DELETE.",
           "var frames = [];",
           "for (var t = 0; t < 30; t++) {",
           "  var f = new Array(1629);",
-          "  for (var i = 0; i < 1629; i++) { f[i] = Math.round((0.3 + 0.4 * Math.abs(Math.sin(i * 0.37 + t * 0.11))) * 1e5) / 1e5; }",
+          "  for (var i = 0; i < 1629; i++) { f[i] = Math.round((0.3 + 0.4 * Math.abs(Math.sin(i * 2.1))) * 1e5) / 1e5; }",
           "  frames.push(f);",
           "}",
           "pm.variables.set('frames', JSON.stringify(frames));"
@@ -104,11 +105,46 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": { "mode": "raw", "raw": "{\n  \"frames\": {{frames}},\n  \"top_k\": 3,\n  \"save_history\": true\n}" },
         "url": { "raw": "{{base_url}}/api/recognize" },
-        "description": "Persiste en history solo si el JWT es válido, aceptada=true y save_history=true."
+        "description": "Persiste en history solo si el JWT es válido, aceptada=true y save_history=true. Los frames del pre-request superan el umbral, así que crea una entrada."
+      }
+    },
+    {
+      "name": "Mi perfil",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/users/me" },
+        "description": "200 con id, username y email; nunca password_hash."
+      }
+    },
+    {
+      "name": "Actualizar mi perfil (email)",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"demo.nuevo@signia.cl\",\n  \"current_password\": \"Demo1234!\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/users/me" },
+        "description": "Campos: email y/o new_password, más current_password obligatoria. Contraseña actual incorrecta -> 401 genérico; email de otra cuenta -> 409 genérico; campos extra o contraseña débil -> 422. Límite: 5/min por IP."
       }
     },
     {
       "name": "Mi historial",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var lista = pm.response.code === 200 ? pm.response.json() : [];",
+              "if (lista.length) { pm.collectionVariables.set('entry_id', lista[0].id); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
         "method": "GET",
@@ -125,12 +161,32 @@
       }
     },
     {
+      "name": "Corregir texto de una entrada",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"spanish_text\": \"Texto corregido en la demo\"\n}" },
+        "url": { "raw": "{{base_url}}/api/history/{{entry_id}}" },
+        "description": "Solo spanish_text (1-500 caracteres). predicted_label, confidence y mode son inmutables: enviarlos -> 422. 404 si la entrada no existe o es de otro usuario."
+      }
+    },
+    {
       "name": "Borrar entrada",
       "request": {
         "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
         "method": "DELETE",
         "url": { "raw": "{{base_url}}/api/history/{{entry_id}}" },
         "description": "404 si no existe o pertenece a otro usuario."
+      }
+    },
+    {
+      "name": "Borrar mi cuenta",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "DELETE",
+        "url": { "raw": "{{base_url}}/api/users/me" },
+        "description": "204 sin cuerpo. Borra la cuenta y su historial en cascada (derecho de supresión, Ley 21.719). Repetir 'Mi perfil' después -> 401."
       }
     }
   ]

@@ -1,0 +1,20 @@
+%% Modelo entidad-relación de la base `signia` (equivale a db/schema.sql y app/db/models.py)
+%% Exportar: mmdc -i db/modelo_datos.mmd -o db/modelo_datos.svg   (o pegar en https://mermaid.live)
+erDiagram
+    users ||--o{ history : "registra (ON DELETE CASCADE)"
+    users {
+        SERIAL id PK
+        VARCHAR_50 username UK "NOT NULL · idx_users_username"
+        VARCHAR_100 email UK "NOT NULL · idx_users_email · editable por su dueño"
+        VARCHAR_255 password_hash "NOT NULL · Argon2id · editable por su dueño"
+        TIMESTAMPTZ created_at "DEFAULT NOW()"
+    }
+    history {
+        SERIAL id PK
+        INTEGER user_id FK "NOT NULL · idx_history_user_id"
+        VARCHAR_50 predicted_label "NOT NULL · inmutable"
+        TEXT spanish_text "NOT NULL · editable por su dueño (1-500)"
+        FLOAT confidence "NOT NULL · CHECK 0..1 · inmutable"
+        VARCHAR_20 mode "NOT NULL · CHECK static o dynamic · inmutable"
+        TIMESTAMPTZ created_at "DEFAULT NOW() · idx DESC"
+    }

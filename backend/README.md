@@ -23,6 +23,8 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
+(El `.env.example` de la raíz del repositorio es una copia de este mismo archivo.)
+
 Editar `.env` con tus credenciales de PostgreSQL. Variables clave:
 
 | Variable | Descripción |
@@ -52,6 +54,9 @@ python -m app.db.seed
 Usuario de prueba: `test_user` / `Test1234!` (hash Argon2id). Las cuentas creadas antes de la
 migración a Argon2id (hashes bcrypt) ya no pueden iniciar sesión: hay que registrarlas de nuevo.
 
+El diagrama entidad-relación está en [`db/modelo_datos.mmd`](db/modelo_datos.mmd) (Mermaid; se
+exporta a SVG/PNG con `mmdc` o en https://mermaid.live).
+
 ## Levantar el servidor
 
 ```powershell
@@ -62,6 +67,18 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152
 (`python -m app.main` ya lo configura). Documentación interactiva (solo con `DEBUG=true`):
 http://localhost:8000/docs (botón **Authorize** para pegar el JWT).
 
+## Estructura en capas
+
+| Capa | Módulos | Responsabilidad |
+|------|---------|-----------------|
+| Transporte | `app/routes/`, `app/schemas/` | Validar la entrada, llamar a servicios o repositorios y traducir a códigos HTTP. **Sin consultas** |
+| Negocio | `app/services/`, `app/ml/` | Reglas de persistencia, segmentación e inferencia |
+| Datos | `app/db/repositories.py`, `app/db/models.py`, `app/db/session.py` | `UserRepository` y `HistoryRepository` concentran todas las consultas de la API; `get_db()` maneja la transacción |
+| Transversal | `app/core/` | Configuración, seguridad, rate limiting, errores y logs |
+
+Un test estático (`test_capas_rutas_sin_consultas_sqlalchemy`) falla si una ruta importa
+`select`/`insert`/`update`/`delete`/`text` de SQLAlchemy o consulta la sesión directamente.
+
 ## Endpoints
 
 | Método | Ruta | Descripción |
@@ -69,12 +86,42 @@ http://localhost:8000/docs (botón **Authorize** para pegar el JWT).
 | POST | `/api/auth/register` | Registro (3/min por IP; `409` genérico si ya existe) |
 | POST | `/api/auth/login` | Login JSON `{username, password}`, devuelve JWT (5/min por IP) |
 | POST | `/api/recognize` | Reconocimiento de una secuencia `(N, 1629)`; JWT opcional (30/min por IP) |
+| GET | `/api/users/me` | 🔒 Perfil propio: `id`, `username`, `email` (nunca `password_hash`) |
+| PATCH | `/api/users/me` | 🔒 Cambia `email` y/o `new_password`; exige `current_password` (5/min por IP) |
+| DELETE | `/api/users/me` | 🔒 Borra la cuenta y su historial en cascada (`204`, sin cuerpo) |
 | GET | `/api/history/me` | 🔒 Historial del usuario autenticado |
 | GET | `/api/history/{user_id}` | 🔒 Historial propio (`403` si `user_id` no es el del token) |
+| PATCH | `/api/history/{entry_id}` | 🔒 Corrige `spanish_text` de una entrada propia (`404` si no existe o es ajena) |
 | DELETE | `/api/history/{entry_id}` | 🔒 Borrar entrada propia (`404` si no existe o es ajena) |
 | GET | `/api/health` | Estado de PostgreSQL y del modelo v3 (503 si está degradado) |
 | GET | `/api/clases` | Glosario de las 89 señas soportadas |
 | WS | `/ws/recognize` | Reconocimiento en streaming, frame a frame |
+
+### `PATCH /api/history/{entry_id}`
+
+```json
+{ "spanish_text": "¿dónde está la salida?" }
+```
+
+- `spanish_text`: 1 a 500 caracteres tras quitar los espacios de los extremos, sin caracteres de control.
+- `predicted_label`, `confidence` y `mode` son inmutables (trazabilidad del modelo): enviarlos responde `422`.
+- `200` con la entrada actualizada; `404` si no existe o es de otro usuario; `401` sin token.
+
+### `PATCH /api/users/me`
+
+```json
+{ "email": "nuevo@example.com", "new_password": "Nueva1234", "current_password": "Actual1234" }
+```
+
+- `email` y `new_password` son opcionales, pero debe venir al menos uno. `new_password` cumple la misma
+  política del registro. Cualquier otro campo (`username`, `id`...) responde `422`.
+- `401` genérico si `current_password` no coincide; `409` genérico si el email ya está en uso.
+- Cambiar la contraseña no invalida los JWT ya emitidos (ver limitaciones en `SECURITY.md`).
+
+### `DELETE /api/users/me`
+
+Responde `204` y elimina la cuenta y su historial (`ON DELETE CASCADE`), sin recuperación posible. El
+JWT deja de servir de inmediato (`401`). No lleva cuerpo: el cliente debe pedir confirmación.
 
 ## Contrato de landmarks (modelo LSCh v3)
 
@@ -171,7 +218,8 @@ pytest backend/tests -v
 | Archivo | Cubre |
 |---|---|
 | `test_ml_parity.py` | Paridad hasta el 4.º decimal contra `conversor/features_lsch.py` (JSON y binario, N=15/30/45), artefactos 1:1, remuestreo, formateo `.I`, semáforo |
-| `test_security.py` | Auth/JWT manipulados, anti-BOLA/IDOR, NaN/Inf, 413 (Content-Length y chunked), 415, 429, cabeceras, CORS, handler 500, WebSocket (Origin, 1009, 1001, límites) |
+| `test_security.py` | Auth/JWT manipulados, anti-BOLA/IDOR, NaN/Inf, 413 (Content-Length y chunked), 415, 429, cabeceras, CORS, separación de capas (AST), handler 500, WebSocket (Origin, 1009, 1001, límites) |
+| `test_crud.py` | CRUD de `history` y `users/me`: éxito y errores, anti-BOLA, inmutabilidad, cascada y repositorios |
 | `test_auth_history.py` | Health, Argon2id, historial y reglas de persistencia de `/api/recognize` |
 | `test_websocket.py` | Máquina de estados: modo auto, ruido descartado, modo manual, aislamiento y persistencia |
 | `test_config_prod.py` | Validación de `Settings`, app con `DEBUG=false` (subproceso), seed idempotente |

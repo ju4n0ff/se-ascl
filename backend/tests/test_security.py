@@ -2,12 +2,15 @@
 cabeceras, CORS, handler 500 y WebSocket (anti-CSWSH, 1009, 1001, límites)."""
 from __future__ import annotations
 
+import ast
 import base64
 import json
 import logging
 import os
 import re
+import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 
 import jwt
@@ -126,6 +129,18 @@ class TestLogin:
             "/api/auth/login", json={"username": "x", "password": "y", "role": "admin"}
         )
         assert r.status_code == 422
+
+    @pytest.mark.parametrize("username", ["\x00", "ana\x00test", "ana\x1btest", "ana\x7f"])
+    def test_login_caracteres_de_control_422(self, client, username):
+        # Regresión: el NUL llegaba a PostgreSQL y respondía 500.
+        r = client.post("/api/auth/login", json={"username": username, "password": "Mala12345"})
+        assert r.status_code == 422
+        assert r.json()["detail"][0]["loc"] == ["body", "username"]
+
+    def test_login_fuera_de_patron_mantiene_401_generico(self, client):
+        r = client.post("/api/auth/login", json={"username": "no válido", "password": "Mala12345"})
+        assert r.status_code == 401
+        assert r.json() == {"detail": "Credenciales inválidas"}
 
     def test_token_trae_claims_obligatorios(self, client, usuario):
         payload = jwt.decode(usuario["token"], TEST_SECRET_KEY, algorithms=["HS256"])
@@ -494,6 +509,30 @@ class TestCabeceras:
         assert r.headers["access-control-allow-origin"] == ORIGEN_OK
         assert "access-control-allow-credentials" not in r.headers
 
+    @pytest.mark.parametrize("metodo", ["GET", "PATCH", "DELETE"])
+    def test_no_store_en_users(self, client, usuario, metodo):
+        for headers in ({}, auth(usuario["token"])):  # 401 y 200/422/204
+            r = client.request(metodo, "/api/users/me", headers=headers)
+            assert r.headers["cache-control"] == "no-store"
+            assert r.headers["pragma"] == "no-cache"
+
+    @pytest.mark.parametrize("ruta", ["/api/history/1", "/api/users/me"])
+    def test_cors_permite_patch(self, client, ruta):
+        r = client.options(
+            ruta,
+            headers={"Origin": ORIGEN_OK, "Access-Control-Request-Method": "PATCH",
+                     "Access-Control-Request-Headers": "authorization,content-type"},
+        )
+        assert r.status_code == 200
+        assert "PATCH" in r.headers["access-control-allow-methods"]
+
+    def test_cors_metodos_acotados(self, client):
+        r = client.options(
+            "/api/users/me",
+            headers={"Origin": ORIGEN_OK, "Access-Control-Request-Method": "PUT"},
+        )
+        assert r.status_code == 400
+
     def test_cors_origen_malicioso(self, client):
         r = client.options(
             "/api/recognize",
@@ -502,6 +541,36 @@ class TestCabeceras:
         assert "access-control-allow-origin" not in r.headers
         r = client.get("/api/health", headers={"Origin": "https://evil.example"})
         assert "access-control-allow-origin" not in r.headers
+
+
+# ========================================================= separación de capas
+RUTAS_DIR = Path(__file__).resolve().parents[1] / "app" / "routes"
+CONSULTAS_PROHIBIDAS = {"select", "insert", "update", "delete", "text"}
+METODOS_SESION_PROHIBIDOS = {"execute", "scalar", "scalars", "add", "flush", "commit"}
+
+
+def test_capas_hay_rutas_que_revisar():
+    assert {"auth.py", "history.py", "users.py"} <= {p.name for p in RUTAS_DIR.glob("*.py")}
+
+
+@pytest.mark.parametrize("archivo", sorted(RUTAS_DIR.glob("*.py")), ids=lambda p: p.name)
+def test_capas_rutas_sin_consultas_sqlalchemy(archivo):
+    """Las consultas viven solo en la capa de datos (``app/db/repositories.py``)."""
+    for nodo in ast.walk(ast.parse(archivo.read_text(encoding="utf-8"))):
+        if isinstance(nodo, ast.ImportFrom) and (nodo.module or "").split(".")[0] == "sqlalchemy":
+            importados = {alias.name for alias in nodo.names}
+            assert not importados & (CONSULTAS_PROHIBIDAS | {"*"}), f"{archivo.name}: {importados}"
+        elif isinstance(nodo, ast.Import):
+            modulos = {alias.name.split(".")[0] for alias in nodo.names}
+            assert "sqlalchemy" not in modulos, f"{archivo.name}: import sqlalchemy"
+        elif (
+            isinstance(nodo, ast.Attribute)
+            and isinstance(nodo.value, ast.Name)
+            and nodo.value.id in {"db", "session"}
+            and nodo.attr in METODOS_SESION_PROHIBIDOS
+        ):
+            # ws.py no usa get_db(): su commit cierra la transacción, no es una consulta.
+            assert (archivo.name, nodo.attr) == ("ws.py", "commit"), f"{archivo.name}: db.{nodo.attr}"
 
 
 # ================================================================= handler 500
@@ -633,6 +702,10 @@ class TestWebSocketSeguridad:
         # Al cerrar se liberan los cupos.
         with ws_ok(client) as ws3:
             assert ws3.receive_json()["type"] == "estado"
+        # El servidor libera el cupo en su propio hilo al procesar el cierre: espera acotada.
+        limite = time.perf_counter() + 1.0
+        while conexiones_ws.activas("testclient") and time.perf_counter() < limite:
+            time.sleep(0.01)
         assert conexiones_ws.activas("testclient") == 0
 
     def test_rate_limit_de_mensajes(self, client, settings, monkeypatch):
