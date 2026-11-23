@@ -1,0 +1,224 @@
+<h1 class="solo-lectores">Traductor en vivo</h1>
+<div class="panel">
+  <section class="camara" aria-label="Cámara">
+    <div class="visor" [class.grabando]="t.grabando()" [class.encendido]="t.fase() === 'activo'">
+      <!-- El espejo es solo visual: MediaPipe lee el <video> original. -->
+      <div class="espejo">
+        <video #video playsinline muted aria-label="Vista de tu cámara"></video>
+        <canvas #lienzo aria-hidden="true"></canvas>
+      </div>
+
+      @switch (t.fase()) {
+        @case ('inactivo') {
+          <div class="capa">
+            <p class="grande">Traduce señas a texto y voz</p>
+            <p>Enciende tu cámara y mantén cabeza y hombros dentro del cuadro.</p>
+          </div>
+        }
+        @case ('cargando') {
+          <div class="capa" role="status">
+            <span class="giro" aria-hidden="true"></span>
+            <p>{{ textoCarga() }}</p>
+          </div>
+        }
+        @case ('error') {
+          <div class="capa" role="alert">
+            <p class="grande">No pudimos empezar</p>
+            <p>{{ t.mensajeError() }}</p>
+            <button type="button" class="boton secundario" (click)="backend.comprobar()">
+              Probar conexión con el servidor
+            </button>
+            <p class="chico" role="status">{{ backend.texto() }}</p>
+          </div>
+        }
+      }
+
+      @if (t.fase() === 'activo') {
+        <div class="superior">
+          <span class="insignia" [attr.data-estado]="t.etiqueta()" role="status">{{
+            t.etiqueta()
+          }}</span>
+          @if (t.grabando()) {
+            <span class="insignia neutra">{{ t.ws.frames() }} cuadros</span>
+          }
+          <span class="insignia neutra fps">{{ t.fps() }} FPS</span>
+        </div>
+        <div class="inferior">
+          <span class="insignia neutra" [class.activa]="t.manos().izquierda">Mano izq.</span>
+          <span class="insignia neutra" [class.activa]="t.manos().derecha">Mano der.</span>
+          @if (!t.encuadreOk()) {
+            <span class="insignia alerta-encuadre">Muestra cabeza y hombros</span>
+          }
+        </div>
+      }
+    </div>
+
+    <p class="privacidad">
+      <span aria-hidden="true">🔒</span> Solo se envían landmarks — nunca video.
+    </p>
+
+    @if (t.ws.cierre(); as cierre) {
+      @if (t.fase() === 'activo') {
+        <div class="alerta con-accion" role="alert">
+          <span>{{ cierre.mensaje }}</span>
+          <button type="button" class="boton" (click)="t.reconectar()">Reconectar</button>
+        </div>
+      }
+    }
+
+    <div class="controles">
+      <button type="button" class="boton" (click)="alternarCamara()">
+        {{ t.fase() === 'activo' || t.fase() === 'cargando' ? 'Detener cámara' : 'Iniciar cámara' }}
+      </button>
+      @if (t.modo() === 'manual') {
+        <button
+          type="button"
+          class="boton grabar"
+          [class.activo]="t.grabando()"
+          [disabled]="!t.puedeGrabar()"
+          (click)="t.alternarGrabacion()"
+        >
+          {{ t.grabando() ? 'Detener grabación' : 'Grabar seña' }}
+          <kbd>Espacio</kbd>
+        </button>
+      }
+      @if (t.fase() === 'activo') {
+        <button type="button" class="boton secundario" (click)="t.reiniciar()">Reiniciar</button>
+      }
+    </div>
+
+    <div class="opciones">
+      <div class="segmentos" role="group" aria-label="Modo de captura">
+        @for (m of modos; track m.id) {
+          <button
+            type="button"
+            [attr.aria-pressed]="t.modo() === m.id"
+            (click)="t.cambiarModo(m.id)"
+          >
+            {{ m.texto }}
+          </button>
+        }
+      </div>
+      <p class="ayuda">
+        {{
+          t.modo() === 'auto'
+            ? 'Empieza al levantar las manos y termina al bajarlas.'
+            : 'Tú decides cuándo empieza y termina cada seña.'
+        }}
+      </p>
+      <label class="interruptor">
+        <input
+          type="checkbox"
+          role="switch"
+          [checked]="voz.activo()"
+          [disabled]="!voz.disponible"
+          (change)="voz.alternar()"
+        />
+        Audio automático
+        @if (!voz.disponible) {
+          <small>(tu navegador no tiene voz)</small>
+        }
+      </label>
+      <label class="interruptor">
+        <input
+          #guardar
+          type="checkbox"
+          role="switch"
+          [checked]="t.guardar()"
+          [disabled]="!auth.autenticado()"
+          (change)="t.cambiarGuardar(guardar.checked)"
+        />
+        Guardar en mi historial
+      </label>
+      @if (!auth.autenticado()) {
+        <p class="ayuda">
+          Para guardar tus traducciones, <a routerLink="/login">inicia sesión</a> o
+          <a routerLink="/registro">crea una cuenta</a>. Traducir no la necesita.
+        </p>
+      }
+      <label class="interruptor">
+        <input
+          #esqueleto
+          type="checkbox"
+          role="switch"
+          [checked]="t.esqueleto()"
+          (change)="t.esqueleto.set(esqueleto.checked)"
+        />
+        Mostrar esqueleto
+      </label>
+    </div>
+  </section>
+
+  <section class="resultado tarjeta" aria-label="Traducción">
+    <h2>Traducción</h2>
+    <div aria-live="assertive" aria-atomic="true">
+      @if (t.resultado(); as r) {
+        @if (r.aceptada) {
+          <p class="principal">{{ r.prediccion.texto }}</p>
+        } @else {
+          <p class="principal dudosa">{{ r.prediccion.texto }}</p>
+          <p class="alerta suave-aviso">No estoy seguro de esta seña. Intenta repetirla.</p>
+        }
+      } @else {
+        <p class="vacia">Aquí aparecerá la traducción de tu próxima seña.</p>
+      }
+    </div>
+
+    @if (t.resultado(); as r) {
+      <div class="confianza">
+        <span id="lbl-confianza">Confianza</span>
+        <meter
+          aria-labelledby="lbl-confianza"
+          min="0"
+          max="1"
+          low="0.55"
+          high="0.8"
+          optimum="1"
+          [value]="r.prediccion.confianza"
+        ></meter>
+        <strong>{{ r.prediccion.confianza | percent: '1.0-0' }}</strong>
+      </div>
+      <h3>Alternativas</h3>
+      <ol class="top">
+        @for (c of r.top_k; track c.clase_raw) {
+          <li>
+            <span>{{ c.texto }}</span>
+            <span class="barra" aria-hidden="true"
+              ><span [style.width.%]="c.confianza * 100"></span
+            ></span>
+            <span class="pct">{{ c.confianza | percent: '1.0-1' }}</span>
+          </li>
+        }
+      </ol>
+      <p class="meta">
+        <span>Respuesta del servidor: {{ r.latencia_ms }} ms</span>
+        <span>{{ r.frames_recibidos }} cuadros</span>
+        @if (r.guardado_en_historial) {
+          <span class="guardado">✓ Guardado en tu historial</span>
+        }
+      </p>
+      @if (voz.disponible) {
+        <button type="button" class="boton secundario" (click)="voz.hablar(r.prediccion.texto)">
+          Repetir audio
+        </button>
+      }
+    }
+
+    <p class="aviso-flotante" role="status">{{ t.aviso() }}</p>
+
+    @if (t.frase()) {
+      <div class="frase">
+        <h3>Frase</h3>
+        <p>{{ t.frase() }}</p>
+        <div class="controles">
+          @if (voz.disponible) {
+            <button type="button" class="boton secundario" (click)="t.leerFrase()">
+              Leer frase
+            </button>
+          }
+          <button type="button" class="boton secundario" (click)="t.limpiarFrase()">Limpiar</button>
+        </div>
+      </div>
+    }
+  </section>
+</div>

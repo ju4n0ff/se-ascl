@@ -1,6 +1,6 @@
 # SeñaCL — Reglas Globales del Proyecto
 
-Proyecto: Traductor en tiempo real de Lengua de Señas Chilena (LSCh) con **FastAPI + PostgreSQL** (`backend/`), modelo ML v3 (`conversor/`) y futuro cliente **Angular** (`frontend/`).
+Proyecto: Traductor en tiempo real de Lengua de Señas Chilena (LSCh) con **FastAPI + PostgreSQL** (`backend/`), modelo ML v3 (`conversor/`) y cliente **Angular** (`frontend/`).
 
 ## Arquitectura cloud
 | Capa | Local | Nube |
@@ -16,11 +16,13 @@ de `Settings` son los locales (sin SSL, sin PgBouncer, `TRUST_PROXY_HOPS=0`).
 1. `README_ML.md` — Especificación exacta del modelo v3 (`mejor_modelo_lsch.keras`), geometría, preprocesamiento y contratos de inferencia.
 2. `backend/README.md` — Endpoints actuales, variables de entorno, base de datos (`signia`) y despliegue (Supabase + Render + Vercel).
 3. `backend/SECURITY.md` — Controles OWASP vigentes y limitaciones conocidas.
+4. `frontend/README.md` — Instalación, decisiones (MediaPipe, sesión) y despliegue en Vercel.
 
 ## Skills del proyecto (`.claude/skills/`)
 - `fastapi-lsch-backend` — arquitectura, modelo v3 e **infraestructura cloud** (Supabase, Render, contrato Angular).
 - `appsec-owasp-hardening` — controles OWASP, **RLS, proxy inverso y CORS/CSWSH en la nube**.
 - `qa-testing-parity` — paridad ML, tests de abuso, **tests cloud** y quality gates.
+- `angular-mediapipe-frontend` — capas de Angular, landmarks en el navegador, WebSocket, sesión y **Vercel**.
 
 ## Invariantes Críticas del Modelo ML v3 (PROHIBIDO ROMPER)
 - **Artefactos oficiales:** `conversor/modelos/mejor_modelo_lsch.keras`, `etiquetas_lsch.json`, `config_features.json` y `conversor/features_lsch.py`. No usar el legado `dynamic_lstm.h5`.
@@ -37,6 +39,7 @@ de `Settings` son los locales (sin SSL, sin PgBouncer, `TRUST_PROXY_HOPS=0`).
 - **`pytest` corre solo contra `signia_test` local.** Nunca apuntar `TEST_DATABASE_URL` a Supabase: la suite trunca tablas (`conftest.py` aborta si la base no termina en `_test` o el servidor no es local).
 - `backend/db/schema.sql` hace `DROP TABLE`: en Supabase se ejecuta solo al crear el proyecto, seguido de `backend/db/supabase_rls.sql`.
 - Las consultas viven solo en `app/db/repositories.py`. La IP del cliente se obtiene solo con `core/network.py:obtener_ip_cliente()` y los orígenes se validan solo con `Settings.origen_en_lista_blanca()`.
+- **Frontend:** las vistas de `frontend/src/app/features/` no importan `HttpClient` ni contienen lógica de negocio. El vector de 1629 floats se arma solo en `services/landmarks.ts`; `@mediapipe/holistic` va con versión exacta y `selfieMode: false`. Toda modificación pasa por `npm test` y `npm run build`.
 - Mantener la tabla `history` y los endpoints `/api/auth/*`, `/api/recognize`, `/api/history/*`, `/api/health` y `/ws/recognize` coherentes entre `backend/db/schema.sql`, los modelos SQLAlchemy y los esquemas Pydantic.
 
 ## Comandos
@@ -47,6 +50,12 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152 -
 ruff check backend/app backend/tests
 bandit -r backend/app -ll
 pytest backend/tests -v
+# Frontend (desde frontend/, Node >= 24)
+npm install
+npm start              # http://localhost:4200
+npm test               # reglas de arquitectura + pruebas unitarias
+npm run typecheck
+npm run build
 # Supabase (una vez por proyecto; URL del pooler, nunca en el repo)
 psql "<URL>" -1 -v ON_ERROR_STOP=1 -f backend/db/schema.sql
 psql "<URL>" -1 -v ON_ERROR_STOP=1 -f backend/db/supabase_rls.sql

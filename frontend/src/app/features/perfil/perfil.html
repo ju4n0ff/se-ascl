@@ -1,0 +1,113 @@
+<h1>Mi perfil y privacidad</h1>
+
+@if (estado() === 'ready') {
+  <div class="columnas">
+    <section class="tarjeta">
+      <h2>Mis datos</h2>
+      <p class="suave">
+        Usuario: <strong>{{ auth.usuario()?.username }}</strong>
+      </p>
+      <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+        <div class="campo">
+          <label for="email">Correo</label>
+          <input id="email" type="email" formControlName="email" autocomplete="email" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <p class="error-campo">Escribe un correo válido.</p>
+          }
+        </div>
+        <div class="campo">
+          <label for="new_password">Contraseña nueva (opcional)</label>
+          <input
+            id="new_password"
+            type="password"
+            formControlName="new_password"
+            autocomplete="new-password"
+          />
+          @if (nueva()) {
+            <app-requisitos-password [valor]="nueva()" />
+          }
+          @if (form.controls.new_password.touched && form.controls.new_password.invalid) {
+            <p class="error-campo">La contraseña nueva aún no cumple los requisitos.</p>
+          }
+        </div>
+        <div class="campo">
+          <label for="current_password">Contraseña actual (obligatoria)</label>
+          <input
+            id="current_password"
+            type="password"
+            formControlName="current_password"
+            autocomplete="current-password"
+          />
+          @if (form.controls.current_password.touched && form.controls.current_password.invalid) {
+            <p class="error-campo">Escribe tu contraseña actual para confirmar los cambios.</p>
+          }
+        </div>
+        @if (errorForm()) {
+          <p class="alerta" role="alert">{{ errorForm() }}</p>
+        }
+        <button type="submit" class="boton" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Tu privacidad (Ley 21.719)</h2>
+      <h3>Lo que guardamos</h3>
+      <ul>
+        <li>Tu usuario, tu correo y tu contraseña cifrada de forma irreversible.</li>
+        <li>
+          Solo si lo activas: el texto de tus traducciones, su etiqueta, la confianza, el tipo y la
+          fecha.
+        </li>
+      </ul>
+      <h3>Lo que nunca guardamos</h3>
+      <ul>
+        <li>Video, imágenes ni audio: la cámara se procesa dentro de tu navegador.</li>
+        <li>
+          Los puntos de tu rostro, manos y cuerpo: se usan un instante para traducir y se descartan.
+        </li>
+      </ul>
+      <p>
+        Tienes derecho a acceder a tus datos, corregirlos y eliminarlos. Puedes hacerlo aquí y en tu
+        historial, sin pedirle permiso a nadie.
+      </p>
+      <div class="zona-peligro">
+        <h3>Eliminar mi cuenta</h3>
+        <p>Borra tu cuenta y todo tu historial de forma permanente.</p>
+        <button type="button" class="boton peligro" (click)="abrirDialogo()">
+          Eliminar mi cuenta
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <app-dialogo-confirmar
+    titulo="¿Eliminar tu cuenta?"
+    accion="Eliminar definitivamente"
+    [abierto]="dialogoAbierto()"
+    [habilitado]="entiende()"
+    [ocupado]="eliminando()"
+    (confirmar)="eliminarCuenta()"
+    (cancelar)="cerrarDialogo()"
+  >
+    <p>
+      Se borrarán tu cuenta y <strong>todas tus traducciones guardadas</strong>. Esta acción es
+      irreversible y no podremos recuperar tus datos.
+    </p>
+    <label class="casilla">
+      <input
+        #casilla
+        type="checkbox"
+        [checked]="entiende()"
+        (change)="entiende.set(casilla.checked)"
+      />
+      Entiendo que no se puede deshacer.
+    </label>
+    @if (errorEliminar()) {
+      <p class="alerta" role="alert">{{ errorEliminar() }}</p>
+    }
+  </app-dialogo-confirmar>
+} @else {
+  <app-estado-vista [estado]="estado()" [mensaje]="mensajeCarga()" (reintentar)="cargar()" />
+}
