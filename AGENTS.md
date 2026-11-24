@@ -46,6 +46,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --ws-max-size 49152 -
 
 ## Frontend
 
+- Paleta actual: azul bandera (`#174A78`) como primario/enlaces, rojo bandera (`#C8413A`) en grabación/errores, blanco nieve y arena/piel para manos; el modo oscuro conserva los mismos roles con valores más claros.
 - `features/`, `layout/`, `shared/` no importan `HttpClient`/`ApiService`, ni abren WebSocket/MediaPipe/`getUserMedia`; lo comprueba `frontend/scripts/verificar-capas.mjs`.
 - Solo `core/auth/session.service.ts` usa almacenamiento: JWT en `sessionStorage`, preferencias de accesibilidad en `localStorage` (`senacl.preferencias`). `core/ui/preferencias-accesibilidad.service.ts` solo aplica atributos al `<html>` y delega el guardado; `shared/panel-accesibilidad.ts` se abre desde el header o con Alt+A. Sin grabación de video, `innerHTML`, JWT en URL ni rutas REST con barra final.
 - Ambos `environment*.ts` declaran `referenciasHabilitadas: false`: `services/referencia-sena.service.ts:obtenerReferenciaSena()` entrega la ilustración local `public/referencias/mano.svg` hasta que el backend exponga `GET /api/referencias/{clase}`.

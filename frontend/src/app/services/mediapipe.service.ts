@@ -161,8 +161,8 @@ export class MediaPipeService {
     ctx.lineWidth = Math.max(2, canvas.width / 240);
     ctx.lineCap = 'round';
     this.trazar(ctx, resultados.poseLandmarks, CONEXIONES_BRAZOS, 'rgba(255,255,255,.75)', true);
-    this.trazar(ctx, resultados.leftHandLandmarks, CONEXIONES_MANO, '#B9CE8F');
-    this.trazar(ctx, resultados.rightHandLandmarks, CONEXIONES_MANO, '#E7A07C');
+    this.trazar(ctx, resultados.leftHandLandmarks, CONEXIONES_MANO, '#8FC4E8');
+    this.trazar(ctx, resultados.rightHandLandmarks, CONEXIONES_MANO, '#EF6A62');
   }
 
   private async inicializar(): Promise<void> {
