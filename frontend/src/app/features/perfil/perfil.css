@@ -4,12 +4,16 @@
   gap: 1.25rem;
   align-items: start;
 }
+.columnas .tarjeta {
+  padding: 1.6rem;
+}
 h2 {
   margin-top: 0;
 }
 h3 {
-  margin: 1.1rem 0 0.35rem;
+  margin: 1.2rem 0 0.4rem;
   font-size: 1.05rem;
+  color: var(--verde);
 }
 ul {
   margin: 0;
@@ -18,11 +22,12 @@ ul {
 .zona-peligro {
   margin-top: 1.5rem;
   padding: 1rem 1.25rem 1.25rem;
-  border-radius: 10px;
+  border-radius: 18px;
   border: 1px solid var(--coral-oscuro);
   background: var(--coral-suave);
 }
 .zona-peligro h3 {
+  color: var(--coral-oscuro);
   margin-top: 0;
 }
 .casilla {
@@ -33,4 +38,5 @@ ul {
 .casilla input {
   width: 1.2rem;
   height: 1.2rem;
+  accent-color: var(--verde);
 }
