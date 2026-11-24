@@ -15,6 +15,7 @@ import { BackendStatusService } from '../services/backend-status.service';
         <a routerLink="/" class="marca" aria-label="SeñaCL, inicio" (click)="cerrarMenu()">
           <img src="favicon.svg" alt="" width="34" height="34" />
           <span>Seña<b>CL</b></span>
+          <span class="sello" aria-hidden="true">TRADUCTOR LSCH</span>
         </a>
 
         <button
@@ -38,28 +39,16 @@ import { BackendStatusService } from '../services/backend-status.service';
             >Traducción</a
           >
           <a routerLink="/glosario" routerLinkActive="activo" (click)="cerrarMenu()">Glosario</a>
+          <a routerLink="/historial" routerLinkActive="activo" (click)="cerrarMenu()">Historial</a>
           @if (auth.autenticado()) {
-            <a routerLink="/historial" routerLinkActive="activo" (click)="cerrarMenu()">Historial</a>
-            <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()">{{
-              auth.usuario()?.username ?? 'Mi perfil'
-            }}</a>
+            <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()"
+              >{{ auth.usuario()?.username ?? 'Mi perfil' }}</a
+            >
             <button type="button" (click)="salir()">Salir</button>
-          } @else {
-            <a routerLink="/login" routerLinkActive="activo" (click)="cerrarMenu()">Ingresar</a>
-            <a routerLink="/registro" class="destacado" (click)="cerrarMenu()">Registrarse</a>
           }
         </nav>
 
         <div class="acciones">
-          <button
-            type="button"
-            class="accesibilidad"
-            aria-label="Abrir panel de accesibilidad, atajo Alt más A"
-            (click)="prefs.abrirPanel()"
-          >
-            <span aria-hidden="true">Aa</span>
-            <span class="texto-accesibilidad">Accesibilidad</span>
-          </button>
           <button
             type="button"
             class="salud"
@@ -70,6 +59,24 @@ import { BackendStatusService } from '../services/backend-status.service';
             <span class="punto" aria-hidden="true"></span>
             <span class="texto" role="status">{{ backend.texto() }}</span>
           </button>
+          <button
+            type="button"
+            class="accesibilidad"
+            aria-label="Abrir panel de accesibilidad, atajo Alt más A"
+            (click)="prefs.abrirPanel()"
+          >
+            <span aria-hidden="true">Aa</span>
+            <span class="texto-accesibilidad">Accesibilidad</span>
+            <kbd aria-hidden="true">Alt+A</kbd>
+          </button>
+          @if (auth.autenticado()) {
+            <span class="avatar" aria-hidden="true">{{
+              (auth.usuario()?.username ?? 'U').charAt(0).toUpperCase()
+            }}</span>
+          } @else {
+            <a routerLink="/login" class="ingresar" (click)="cerrarMenu()">Ingresar</a>
+            <a routerLink="/registro" class="registrarse" (click)="cerrarMenu()">Registrarse</a>
+          }
         </div>
       </div>
     </header>

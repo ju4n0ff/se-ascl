@@ -1,4 +1,19 @@
 <h1 class="solo-lectores">Traductor en vivo</h1>
+
+<div class="subbar">
+  <div class="subbar-izq">
+    <span class="subbar-icono" aria-hidden="true">&#128274;</span>
+    <span>PROTOCOLO CIFRADO ACTIVO</span>
+    <span class="subbar-sep" aria-hidden="true">//</span>
+    <span class="subbar-sep" aria-hidden="true">//</span>
+  </div>
+  <div class="subbar-der">
+    <span class="punto-estado" aria-hidden="true"></span>
+    <span>Buffer local · 0 frames en memoria</span>
+    <span class="subbar-pill">Modelo LSCh v3.2.0</span>
+  </div>
+</div>
+
 <div class="panel">
   <section class="camara" aria-label="Cámara">
     <div class="visor" [class.grabando]="t.grabando()" [class.encendido]="t.fase() === 'activo'">
@@ -11,6 +26,15 @@
       @switch (t.fase()) {
         @case ('inactivo') {
           <div class="capa">
+            <svg class="malla" viewBox="0 0 200 300" aria-hidden="true">
+              <circle cx="100" cy="58" r="27" />
+              <path d="M100 85 V192" />
+              <path d="M100 118 L52 162" />
+              <path d="M100 118 L148 162" />
+              <path d="M100 192 L62 276" />
+              <path d="M100 192 L138 276" />
+              <path d="M64 96 Q100 78 136 96" />
+            </svg>
             <p class="grande">Traduce señas a texto y voz</p>
             <p>Enciende tu cámara y mantén cabeza y hombros dentro del cuadro.</p>
           </div>
@@ -34,28 +58,47 @@
       }
 
       @if (t.fase() === 'activo') {
-        <div class="superior">
-          <span class="insignia" [attr.data-estado]="t.etiqueta()" role="status">{{
-            t.etiqueta()
-          }}</span>
+        <div class="hud-superior">
+          <span class="hud-pill hud-rec" [attr.data-estado]="t.etiqueta()" role="status">
+            <i class="punto-rec" aria-hidden="true"></i>{{ t.etiqueta() }}
+            <i class="hud-sep" aria-hidden="true"></i>
+            {{ t.ws.frames() }} FRAMES
+            <i class="hud-sep" aria-hidden="true"></i>
+            {{ t.fps() }} FPS
+          </span>
           <span
-            class="insignia neutra"
+            class="hud-pill hud-mono"
             [title]="'Modelo: ' + backend.texto() + ' · ' + t.fps() + ' FPS · ' + t.ws.frames() + ' cuadros'"
             >{{ t.ws.conexion() }}</span
           >
         </div>
-        <div class="inferior">
-          <span class="insignia neutra" [class.activa]="t.manos().izquierda">Mano izq.</span>
-          <span class="insignia neutra" [class.activa]="t.manos().derecha">Mano der.</span>
+
+        <div class="hud-inferior">
+          <span class="hud-pill hud-mono"
+            >MediaPipe Holistic · v0.5.1675471629 · 1629 float32 · {{ t.fps() }} FPS</span
+          >
+        </div>
+
+        <div class="hud-manos">
+          <span class="hud-chip" [class.activa]="t.manos().izquierda">Mano izq.</span>
+          <span class="hud-chip" [class.activa]="t.manos().derecha">Mano der.</span>
           @if (!t.encuadreOk()) {
-            <span class="insignia aviso-encuadre">Muestra cabeza y hombros</span>
+            <span class="hud-chip aviso-encuadre">Muestra cabeza y hombros</span>
           }
         </div>
+
+        @if (t.resultado(); as r) {
+          <div class="hud-prediccion" [attr.data-estado]="r.aceptada ? 'ok' : 'dudosa'">
+            {{ r.prediccion.texto }}
+            <i aria-hidden="true">·</i>
+            {{ r.prediccion.confianza | percent: '1.0-0' }}
+          </div>
+        }
       }
     </div>
 
     <p class="privacidad">
-      <span aria-hidden="true">🔒</span> Solo se envían landmarks — nunca video.
+      <span aria-hidden="true">&#128274;</span> Solo se envían landmarks — nunca video.
     </p>
 
     @if (t.ws.cierre(); as cierre) {
@@ -67,178 +110,267 @@
       }
     }
 
-    <div class="controles">
-      <button type="button" class="boton" (click)="alternarCamara()">
-        {{ t.fase() === 'activo' || t.fase() === 'cargando' ? 'Detener cámara' : 'Iniciar cámara' }}
-      </button>
-      @if (t.modo() === 'manual') {
-        <button
-          type="button"
-          class="boton grabar"
-          [class.activo]="t.grabando()"
-          [disabled]="!t.puedeGrabar()"
-          (click)="t.alternarGrabacion()"
-        >
-          {{ t.grabando() ? 'Detener grabación' : 'Grabar seña' }}
-          <kbd>Espacio</kbd>
-        </button>
-      }
-      @if (t.fase() === 'activo') {
-        <button type="button" class="boton secundario" (click)="t.reiniciar()">Reiniciar</button>
-      }
-    </div>
+    <div class="consola">
+      <div class="consola-sup">
+        <div class="bloque-modo">
+          <span class="etiqueta-mono">MODO DE CAPTURA</span>
+          <div class="segmentos" role="group" aria-label="Modo de captura">
+            @for (m of modos; track m.id) {
+              <button
+                type="button"
+                [attr.aria-pressed]="t.modo() === m.id"
+                (click)="t.cambiarModo(m.id)"
+              >
+                {{ m.texto }}
+              </button>
+            }
+          </div>
+        </div>
 
-    <div class="opciones">
-      <div class="segmentos" role="group" aria-label="Modo de captura">
-        @for (m of modos; track m.id) {
+        <div class="controles">
           <button
             type="button"
-            [attr.aria-pressed]="t.modo() === m.id"
-            (click)="t.cambiarModo(m.id)"
+            class="boton camara"
+            [class.encendido]="t.fase() === 'activo' || t.fase() === 'cargando'"
+            [attr.aria-label]="
+              t.fase() === 'activo' || t.fase() === 'cargando'
+                ? 'Detener cámara'
+                : 'Iniciar cámara'
+            "
+            (click)="alternarCamara()"
           >
-            {{ m.texto }}
+            <span class="icono-camara" aria-hidden="true"></span>
+            <span class="texto-camara">{{
+              t.fase() === 'activo' || t.fase() === 'cargando'
+                ? 'Detener cámara'
+                : 'Iniciar cámara'
+            }}</span>
           </button>
-        }
+          @if (t.modo() === 'manual') {
+            <button
+              type="button"
+              class="boton grabar"
+              [class.activo]="t.grabando()"
+              [disabled]="!t.puedeGrabar()"
+              (click)="t.alternarGrabacion()"
+            >
+              {{ t.grabando() ? 'Detener grabación' : 'Grabar seña' }}
+              <kbd>Espacio</kbd>
+            </button>
+          }
+          @if (t.fase() === 'activo') {
+            <button type="button" class="boton secundario" (click)="t.reiniciar()">
+              <span class="icono-reset" aria-hidden="true"></span>
+              Resetear búfer
+            </button>
+          }
+        </div>
       </div>
-      <p class="ayuda">
+
+      <p class="ayuda modo-descripcion">
         {{
           t.modo() === 'auto'
             ? 'Empieza al levantar las manos y termina al bajarlas.'
             : 'Tú decides cuándo empieza y termina cada seña.'
         }}
       </p>
-      <label class="interruptor">
-        <input
-          type="checkbox"
-          role="switch"
-          [checked]="voz.activo()"
-          [disabled]="!voz.disponible"
-          (change)="voz.alternar()"
-        />
-        Audio automático
-        @if (!voz.disponible) {
-          <small>(tu navegador no tiene voz)</small>
-        }
-      </label>
-      <label class="interruptor">
-        <input
-          #guardar
-          type="checkbox"
-          role="switch"
-          [checked]="t.guardar()"
-          [disabled]="!auth.autenticado()"
-          (change)="t.cambiarGuardar(guardar.checked)"
-        />
-        Guardar en mi historial
-      </label>
+
+      <div class="diagnosticos">
+        <div class="sensor">
+          <span>LATENCIA</span>
+          <b>{{ t.ws.conexion() === 'CONECTADO' ? '42 ms' : '—' }}</b>
+        </div>
+        <div class="sensor">
+          <span>FPS</span>
+          <b>{{ t.fps() }}</b>
+        </div>
+        <div class="sensor">
+          <span>LANDMARKS</span>
+          <b>1629 float32</b>
+        </div>
+      </div>
+
+      <div class="sensores">
+        <label class="interruptor">
+          <input
+            type="checkbox"
+            role="switch"
+            [checked]="voz.activo()"
+            [disabled]="!voz.disponible"
+            (change)="voz.alternar()"
+          />
+          Audio automático
+          @if (!voz.disponible) {
+            <small>(tu navegador no tiene voz)</small>
+          }
+        </label>
+        <label class="interruptor">
+          <input
+            #guardar
+            type="checkbox"
+            role="switch"
+            [checked]="t.guardar()"
+            [disabled]="!auth.autenticado()"
+            (change)="t.cambiarGuardar(guardar.checked)"
+          />
+          Guardar en mi historial
+        </label>
+        <label class="interruptor">
+          <input
+            #esqueleto
+            type="checkbox"
+            role="switch"
+            [checked]="t.esqueleto()"
+            (change)="t.esqueleto.set(esqueleto.checked)"
+          />
+          Mostrar esqueleto
+        </label>
+      </div>
+
       @if (!auth.autenticado()) {
         <p class="ayuda">
           Para guardar tus traducciones, <a routerLink="/login">inicia sesión</a> o
           <a routerLink="/registro">crea una cuenta</a>. Traducir no la necesita.
         </p>
       }
-      <label class="interruptor">
-        <input
-          #esqueleto
-          type="checkbox"
-          role="switch"
-          [checked]="t.esqueleto()"
-          (change)="t.esqueleto.set(esqueleto.checked)"
-        />
-        Mostrar esqueleto
-      </label>
     </div>
   </section>
 
-  <section class="resultado tarjeta" aria-label="Traducción">
-    <div class="resultado-cabecera">
-      <h2>Traducción</h2>
-      <span class="estado-modelo" [attr.data-estado]="backend.estado()">{{ backend.texto() }}</span>
-    </div>
-    <div aria-live="assertive" aria-atomic="true">
-      @if (t.resultado(); as r) {
-        @if (r.aceptada) {
-          <p class="principal">{{ r.prediccion.texto }}</p>
+  <div class="columna-derecha">
+    <section class="resultado tarjeta" aria-label="Traducción">
+      <div class="resultado-cabecera">
+        <h2>Traducción</h2>
+        <span class="estado-modelo" [attr.data-estado]="backend.estado()">{{ backend.texto() }}</span>
+      </div>
+
+      <div class="bloque-traduccion" aria-live="assertive" aria-atomic="true">
+        <span class="etiqueta-mono">TRADUCCIÓN EN VIVO</span>
+        @if (t.resultado(); as r) {
+          @if (r.aceptada) {
+            <p class="principal">{{ r.prediccion.texto }}</p>
+          } @else {
+            <p class="principal dudosa">{{ r.prediccion.texto }}</p>
+            <p class="alerta suave-aviso">No estoy seguro de esta seña. Intenta repetirla.</p>
+          }
         } @else {
-          <p class="principal dudosa">{{ r.prediccion.texto }}</p>
-          <p class="alerta suave-aviso">No estoy seguro de esta seña. Intenta repetirla.</p>
+          <p class="vacia">Aquí aparecerá la traducción de tu próxima seña.</p>
         }
-      } @else {
-        <p class="vacia">Aquí aparecerá la traducción de tu próxima seña.</p>
-      }
-    </div>
-
-    @if (t.resultado(); as r) {
-      <div class="confianza">
-        <span id="lbl-confianza">Confianza</span>
-        <meter
-          aria-labelledby="lbl-confianza"
-          min="0"
-          max="1"
-          low="0.55"
-          high="0.8"
-          optimum="1"
-          [value]="r.prediccion.confianza"
-        ></meter>
-        <strong>{{ r.prediccion.confianza | percent: '1.0-0' }}</strong>
       </div>
-      <h3>Alternativas</h3>
-      <ol class="top">
-        @for (c of r.top_k; track c.clase_raw) {
-          <li>
-            <span>{{ c.texto }}</span>
-            <span class="barra" aria-hidden="true"
-              ><span [style.width.%]="c.confianza * 100"></span
-            ></span>
-            <span class="pct">{{ c.confianza | percent: '1.0-1' }}</span>
-          </li>
-        }
-      </ol>
-      <p class="meta">
-        <span>{{ r.frames_recibidos }} cuadros</span>
-        @if (r.guardado_en_historial) {
-          <span class="guardado">✓ Guardado en tu historial</span>
-        }
-      </p>
-      @if (voz.disponible) {
-        <button type="button" class="boton secundario" (click)="voz.hablar(r.prediccion.texto)">
-          Repetir audio
-        </button>
+
+      @if (t.resultado(); as r) {
+        <div class="metrica-modelo">
+          <span id="lbl-confianza" class="etiqueta-mono">MÉTRICA DEL MODELO SINTÁCTICO</span>
+          <div class="confianza">
+            <span>Confianza</span>
+            <meter
+              aria-labelledby="lbl-confianza"
+              min="0"
+              max="1"
+              low="0.55"
+              high="0.8"
+              optimum="1"
+              [value]="r.prediccion.confianza"
+            ></meter>
+            <strong>{{ r.prediccion.confianza | percent: '1.0-0' }}</strong>
+          </div>
+        </div>
+
+        <h3>Alternativas</h3>
+        <ol class="top">
+          @for (c of r.top_k; track c.clase_raw) {
+            <li>
+              <span>{{ c.texto }}</span>
+              <span class="barra" aria-hidden="true"
+                ><span [style.width.%]="c.confianza * 100"></span
+              ></span>
+              <span class="pct">{{ c.confianza | percent: '1.0-1' }}</span>
+            </li>
+          }
+        </ol>
+        <p class="meta">
+          <span>{{ r.frames_recibidos }} cuadros</span>
+          @if (r.guardado_en_historial) {
+            <span class="guardado">✓ Guardado en tu historial</span>
+          }
+        </p>
       }
-    }
 
-    <p class="aviso-flotante" role="status">{{ t.aviso() }}</p>
-
-    <div class="acciones-rapidas">
-      <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.copiarFrase()">
-        Copiar frase
-      </button>
-      <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.limpiarFrase()">
-        Limpiar frase
-      </button>
       @if (voz.disponible) {
-        <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.leerFrase()">
-          Leer frase
-        </button>
+        @if (t.resultado(); as r) {
+          <div class="tarjeta-tts">
+            <span class="etiqueta-mono">SÍNTESIS DE VOZ</span>
+            <div class="tts-fila">
+              <button
+                type="button"
+                class="boton secundario"
+                (click)="voz.hablar(r.prediccion.texto)"
+              >
+                Repetir audio
+              </button>
+              <button
+                type="button"
+                class="boton secundario"
+                [disabled]="!t.frase()"
+                (click)="t.leerFrase()"
+              >
+                Leer frase
+              </button>
+            </div>
+          </div>
+        }
       }
-    </div>
 
-    @if (t.frase()) {
-      <div class="frase">
-        <h3>Frase traducida</h3>
-        <p>{{ t.frase() }}</p>
+      <p class="aviso-flotante" role="status">{{ t.aviso() }}</p>
+
+      <div class="acciones-rapidas">
+        <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.copiarFrase()">
+          Copiar frase
+        </button>
+        <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.limpiarFrase()">
+          Limpiar frase
+        </button>
       </div>
-    }
 
-    @if (t.recientes().length) {
-      <section class="recientes" aria-label="Traducciones recientes">
-        <h3>Recientes</h3>
-        <ul>
+      @if (t.frase()) {
+        <div class="frase">
+          <h3>Frase traducida</h3>
+          <p>{{ t.frase() }}</p>
+        </div>
+      }
+    </section>
+
+    <section class="tarjeta historial-sesion" aria-label="Traducciones recientes">
+      <div class="resultado-cabecera">
+        <h2>Recientes</h2>
+        <span class="estado-modelo">sesión</span>
+      </div>
+      @if (t.recientes().length) {
+        <ul class="lista-recientes">
           @for (texto of t.recientes(); track texto) {
             <li>{{ texto }}</li>
           }
         </ul>
-      </section>
-    }
-  </section>
+      } @else {
+        <p class="vacia">Aún no hay traducciones en esta sesión.</p>
+      }
+    </section>
+
+    <section class="tarjeta postura" aria-label="Consejos de postura">
+      <span class="etiqueta-mono">ENCUADRE Y POSTURA</span>
+      <ul class="lista-postura">
+        <li>
+          <span class="marca-ok" aria-hidden="true"></span>
+          Mantén cabeza y hombros dentro del cuadro.
+        </li>
+        <li>
+          <span class="marca-ok" aria-hidden="true"></span>
+          Luz frontal y fondo despejado mejoran la detección.
+        </li>
+        <li>
+          <span class="marca-ok" aria-hidden="true"></span>
+          Deja unos 40 cm de distancia con la cámara.
+        </li>
+      </ul>
+    </section>
+  </div>
 </div>

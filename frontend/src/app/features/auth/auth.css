@@ -1,31 +1,32 @@
 :host {
   display: block;
-  width: min(100%, 32rem);
+  width: min(100%, 34rem);
   margin: 0.75rem auto 2rem;
 }
 .tarjeta-auth {
-  padding: 1.6rem;
+  padding: 2rem;
+  border-radius: var(--radio-grande);
 }
 .cabecera {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.4rem;
   text-align: center;
 }
 .sello {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: 0.6rem;
-  border: 1px solid var(--arena);
+  width: 3.4rem;
+  height: 3.4rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--verde-claro);
   border-radius: 50%;
-  background: var(--crema);
-  color: var(--oliva);
+  background: var(--verde-claro);
+  color: var(--verde-oscuro);
   font-weight: 800;
 }
 h1 {
   margin: 0;
-  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-size: clamp(1.7rem, 4vw, 2.1rem);
 }
 .cabecera p {
   margin: 0.4rem 0 0;
@@ -46,26 +47,31 @@ h1 {
   min-width: 5.2rem;
   min-height: 44px;
   padding: 0.4rem 0.6rem;
-  border: 1px solid var(--arena);
+  border: 1px solid var(--borde);
   border-radius: var(--radio);
-  background: var(--crema);
-  color: var(--cuero);
+  background: var(--crema-fondo);
+  color: var(--verde);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
 }
 .ver-clave:hover {
-  background: var(--arena);
-  color: var(--cafe-profundo);
+  background: var(--verde-claro);
+  color: var(--verde-oscuro);
 }
 form .boton.ancho {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.7rem;
 }
 .pequeno {
   font-size: 0.85rem;
 }
 .centro {
   text-align: center;
+}
+@media (max-width: 640px) {
+  .tarjeta-auth {
+    padding: 1.4rem;
+  }
 }

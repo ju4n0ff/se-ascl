@@ -42,7 +42,7 @@ Angular 22 (standalone, signals, sin Zone), TypeScript `strict`, CSS propio, Vit
 - Cero persistencia biométrica: prohibido grabar, serializar o almacenar video, frames o landmarks. Sin fuentes, scripts ni analítica de terceros.
 
 ## 5. Identidad y accesibilidad
-- Azul `#1B365D`, coral `#E05A47`, fondos `#F8FAFC`/`#FFFFFF`, suaves `#FDF2F0`/`#EEF4FB`. El coral de marca no alcanza AA en texto normal: usarlo en rellenos, bordes y texto grande en negrita (≥ 19 px); para texto normal, `--coral-oscuro`.
+- Verde SeñaCL `#1E4438`, acento menta `#C2ECDA`, rojo `#C8413A`, fondos crema `#FAF8F5`/`#F6F3EE` y verde oscuro `#123027` en franjas/pie. El rojo de marca no alcanza AA en texto normal: usarlo en rellenos, bordes y texto grande en negrita (≥ 19 px); para texto normal, `--coral-oscuro`.
 - Foco visible, `aria-live` en resultados, `role="alert"` en errores, `prefers-reduced-motion`, sin desborde horizontal a 375 px. Espacio graba solo si el foco no está en un control.
 
 ## 6. Vercel
