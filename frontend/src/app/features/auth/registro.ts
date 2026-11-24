@@ -18,11 +18,14 @@ import { RequisitosPassword } from '../../shared/requisitos-password';
   selector: 'app-registro',
   imports: [ReactiveFormsModule, RouterLink, RequisitosPassword],
   template: `
-    <section class="tarjeta angosta">
-      <h1>Crear cuenta</h1>
-      <p class="suave">
-        Guardamos tu usuario, correo y traducciones. Nunca tu video ni los puntos de tu cuerpo.
-      </p>
+    <section class="tarjeta angosta tarjeta-auth">
+      <div class="cabecera">
+        <span class="sello" aria-hidden="true">Aa</span>
+        <h1>Crear cuenta</h1>
+        <p class="suave">
+          Guardamos tu usuario, correo y traducciones. Nunca tu video ni los puntos de tu cuerpo.
+        </p>
+      </div>
       <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
         <div class="campo">
           <label for="username">Usuario</label>
@@ -54,13 +57,28 @@ import { RequisitosPassword } from '../../shared/requisitos-password';
         </div>
         <div class="campo">
           <label for="password">Contraseña</label>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            autocomplete="new-password"
-          />
-          <app-requisitos-password [valor]="password()" />
+          <div class="campo-clave">
+            <input
+              id="password"
+              [type]="verPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="new-password"
+              [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+              aria-describedby="requisitos-password"
+            />
+            <button
+              type="button"
+              class="ver-clave"
+              [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="verPassword()"
+              (click)="alternarPassword()"
+            >
+              {{ verPassword() ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+          <div id="requisitos-password">
+            <app-requisitos-password [valor]="password()" />
+          </div>
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <p class="error-campo">La contraseña aún no cumple los requisitos.</p>
           }
@@ -78,6 +96,7 @@ import { RequisitosPassword } from '../../shared/requisitos-password';
       </p>
     </section>
   `,
+  styleUrl: './auth.css',
 })
 export class Registro {
   readonly volver = input<string>();
@@ -98,6 +117,11 @@ export class Registro {
   });
   protected readonly enviando = signal(false);
   protected readonly error = signal('');
+  protected readonly verPassword = signal(false);
+
+  protected alternarPassword(): void {
+    this.verPassword.update((visible) => !visible);
+  }
 
   protected enviar(): void {
     this.form.markAllAsTouched();

@@ -36,13 +36,14 @@ import { Component, ElementRef, effect, input, output, viewChild } from '@angula
     dialog {
       width: min(32rem, calc(100vw - 2rem));
       padding: 1.5rem;
-      border: 0;
-      border-radius: var(--radio);
+      border: 1px solid var(--arena);
+      border-radius: var(--radio-grande);
+      background: var(--superficie);
       color: var(--texto);
       box-shadow: var(--sombra);
     }
     dialog::backdrop {
-      background: rgb(15 30 52 / 0.6);
+      background: rgb(var(--cafe-profundo-rgb) / 0.6);
     }
     h2 {
       margin-top: 0;

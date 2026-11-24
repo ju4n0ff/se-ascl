@@ -35,7 +35,7 @@ import { Component, input, output } from '@angular/core';
     .esqueleto {
       height: 6rem;
       border-radius: var(--radio);
-      background: linear-gradient(90deg, #e6ecf4 25%, #f3f6fa 50%, #e6ecf4 75%) 0 0 / 200% 100%;
+      background: linear-gradient(90deg, var(--borde) 25%, var(--crema) 50%, var(--borde) 75%) 0 0 / 200% 100%;
       animation: brillo 1.4s infinite linear;
     }
     @keyframes brillo {
@@ -46,9 +46,9 @@ import { Component, input, output } from '@angular/core';
     .caja {
       padding: 2.5rem 1.5rem;
       text-align: center;
-      border: 1px dashed var(--borde-fuerte);
-      border-radius: var(--radio);
-      background: var(--blanco);
+      border: 1px dashed var(--arena);
+      border-radius: var(--radio-grande);
+      background: var(--superficie);
     }
     .caja p {
       margin: 0 auto 1rem;

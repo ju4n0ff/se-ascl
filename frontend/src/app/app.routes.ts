@@ -15,6 +15,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/glosario/glosario').then((m) => m.Glosario),
   },
   {
+    path: 'informacion',
+    title: 'Guía y privacidad · SeñaCL',
+    loadComponent: () => import('./features/informacion/informacion').then((m) => m.Informacion),
+  },
+  {
     path: 'login',
     title: 'Iniciar sesión · SeñaCL',
     canActivate: [invitadoGuard],

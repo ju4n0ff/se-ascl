@@ -19,7 +19,7 @@ ul {
   margin-top: 1.5rem;
   padding: 1rem 1.25rem 1.25rem;
   border-radius: 10px;
-  border: 1px solid #f0c4bc;
+  border: 1px solid var(--coral-oscuro);
   background: var(--coral-suave);
 }
 .zona-peligro h3 {

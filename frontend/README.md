@@ -98,6 +98,8 @@ incluidos **todos** los que superan el umbral 0,55; las 3 diferencias tienen con
 
 En **`sessionStorage`**. Sobrevive a recargar la página y se borra al cerrar la pestaña.
 
+Las preferencias de accesibilidad (texto, contraste, tema, movimiento, subrayado y foco) viven aparte en **`localStorage`** bajo `senacl.preferencias`; nunca guardan video, landmarks ni credenciales. `SessionService` sigue siendo el único dueño del almacenamiento y el panel se abre desde el header o con `Alt+A`.
+
 | Opción | A favor | En contra |
 |---|---|---|
 | `sessionStorage` (elegida) | Sobrevive a F5; no queda en equipos compartidos; no se comparte entre pestañas | Cada pestaña nueva pide iniciar sesión; legible por un XSS |

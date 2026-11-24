@@ -38,16 +38,17 @@
           <span class="insignia" [attr.data-estado]="t.etiqueta()" role="status">{{
             t.etiqueta()
           }}</span>
-          @if (t.grabando()) {
-            <span class="insignia neutra">{{ t.ws.frames() }} cuadros</span>
-          }
-          <span class="insignia neutra fps">{{ t.fps() }} FPS</span>
+          <span
+            class="insignia neutra"
+            [title]="'Modelo: ' + backend.texto() + ' · ' + t.fps() + ' FPS · ' + t.ws.frames() + ' cuadros'"
+            >{{ t.ws.conexion() }}</span
+          >
         </div>
         <div class="inferior">
           <span class="insignia neutra" [class.activa]="t.manos().izquierda">Mano izq.</span>
           <span class="insignia neutra" [class.activa]="t.manos().derecha">Mano der.</span>
           @if (!t.encuadreOk()) {
-            <span class="insignia alerta-encuadre">Muestra cabeza y hombros</span>
+            <span class="insignia aviso-encuadre">Muestra cabeza y hombros</span>
           }
         </div>
       }
@@ -150,7 +151,10 @@
   </section>
 
   <section class="resultado tarjeta" aria-label="Traducción">
-    <h2>Traducción</h2>
+    <div class="resultado-cabecera">
+      <h2>Traducción</h2>
+      <span class="estado-modelo" [attr.data-estado]="backend.estado()">{{ backend.texto() }}</span>
+    </div>
     <div aria-live="assertive" aria-atomic="true">
       @if (t.resultado(); as r) {
         @if (r.aceptada) {
@@ -191,7 +195,6 @@
         }
       </ol>
       <p class="meta">
-        <span>Respuesta del servidor: {{ r.latencia_ms }} ms</span>
         <span>{{ r.frames_recibidos }} cuadros</span>
         @if (r.guardado_en_historial) {
           <span class="guardado">✓ Guardado en tu historial</span>
@@ -206,19 +209,36 @@
 
     <p class="aviso-flotante" role="status">{{ t.aviso() }}</p>
 
+    <div class="acciones-rapidas">
+      <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.copiarFrase()">
+        Copiar frase
+      </button>
+      <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.limpiarFrase()">
+        Limpiar frase
+      </button>
+      @if (voz.disponible) {
+        <button type="button" class="boton secundario" [disabled]="!t.frase()" (click)="t.leerFrase()">
+          Leer frase
+        </button>
+      }
+    </div>
+
     @if (t.frase()) {
       <div class="frase">
-        <h3>Frase</h3>
+        <h3>Frase traducida</h3>
         <p>{{ t.frase() }}</p>
-        <div class="controles">
-          @if (voz.disponible) {
-            <button type="button" class="boton secundario" (click)="t.leerFrase()">
-              Leer frase
-            </button>
-          }
-          <button type="button" class="boton secundario" (click)="t.limpiarFrase()">Limpiar</button>
-        </div>
       </div>
+    }
+
+    @if (t.recientes().length) {
+      <section class="recientes" aria-label="Traducciones recientes">
+        <h3>Recientes</h3>
+        <ul>
+          @for (texto of t.recientes(); track texto) {
+            <li>{{ texto }}</li>
+          }
+        </ul>
+      </section>
     }
   </section>
 </div>

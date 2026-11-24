@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="titulo descripcion">
+  <title id="titulo">Ilustración de una mano abierta</title>
+  <desc id="descripcion">Referencia visual genérica mientras se graba la seña específica.</desc>
+  <rect width="320" height="320" rx="48" fill="#F5EBDD"/>
+  <circle cx="160" cy="158" r="120" fill="#EDC3A2" opacity="0.42"/>
+  <g fill="#A96142" stroke="#593E2E" stroke-width="5" stroke-linejoin="round">
+    <rect x="113" y="148" width="94" height="116" rx="36"/>
+    <rect x="116" y="70" width="20" height="100" rx="10" transform="rotate(-7 126 120)"/>
+    <rect x="140" y="58" width="20" height="112" rx="10" transform="rotate(-2 150 114)"/>
+    <rect x="164" y="64" width="20" height="106" rx="10" transform="rotate(4 174 117)"/>
+    <rect x="188" y="82" width="19" height="88" rx="9.5" transform="rotate(10 197.5 126)"/>
+    <rect x="89" y="166" width="28" height="84" rx="14" transform="rotate(26 103 208)"/>
+  </g>
+  <g fill="none" stroke="#FFFDF8" stroke-width="4" stroke-linecap="round" opacity="0.75">
+    <path d="M144 222c14-8 28-8 42 0"/>
+    <path d="M144 240c13-7 27-7 40 0"/>
+    <path d="M134 174c8-6 18-6 26 0"/>
+  </g>
+</svg>

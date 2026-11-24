@@ -31,21 +31,24 @@ import { NotificationService } from '../core/ui/notification.service';
       align-items: start;
       gap: 0.75rem;
       padding: 0.8rem 1rem;
-      border-radius: 10px;
-      background: var(--azul);
-      color: var(--blanco);
+      border-radius: var(--radio);
+      background: var(--cafe-profundo);
+      color: var(--superficie);
       box-shadow: var(--sombra);
-      border-left: 5px solid #8fb4e3;
+      border-left: 5px solid var(--arena);
     }
     .aviso[data-tipo='exito'] {
-      border-left-color: #5dd39e;
+      border-left-color: var(--oliva);
     }
     .aviso[data-tipo='error'] {
-      border-left-color: var(--coral);
+      border-left-color: var(--acento);
     }
     button {
+      min-width: 44px;
+      min-height: 44px;
       margin-left: auto;
       border: 0;
+      border-radius: var(--radio);
       background: none;
       color: inherit;
       font-size: 1.3rem;

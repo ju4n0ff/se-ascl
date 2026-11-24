@@ -2,8 +2,18 @@ import { Injectable, computed, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 
 const CLAVE = 'senacl.token';
+const CLAVE_PREFERENCIAS = 'senacl.preferencias';
 /** setTimeout desborda con más de 2^31-1 ms. */
 const MAX_TIMEOUT_MS = 2_147_483_647;
+
+export interface PreferenciasGuardadas {
+  escala?: 'normal' | 'grande' | 'extra';
+  contraste?: 'suave' | 'alto';
+  tema?: 'claro' | 'oscuro';
+  reducirMovimiento?: boolean;
+  subrayarEnlaces?: boolean;
+  focoVisible?: boolean;
+}
 
 /** Expiración del JWT en ms. Se lee solo para UX: la validez la decide el backend. */
 export function expiracionMs(token: string): number | null {
@@ -18,8 +28,8 @@ export function expiracionMs(token: string): number | null {
 }
 
 /**
- * Único dueño del JWT. `sessionStorage`: sobrevive a recargar la página y desaparece al
- * cerrar la pestaña (ver frontend/README.md, "Decisión: dónde vive el JWT").
+ * Único dueño del almacenamiento del navegador: el JWT vive en `sessionStorage` y las
+ * preferencias de interfaz en `localStorage`. Nunca guarda video, cuadros ni landmarks.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionService {
@@ -76,6 +86,23 @@ export class SessionService {
     try {
       if (token === null) sessionStorage.removeItem(CLAVE);
       else sessionStorage.setItem(CLAVE, token);
+    } catch {
+      /* sin almacenamiento disponible */
+    }
+  }
+
+  leerPreferencias(): PreferenciasGuardadas {
+    try {
+      const dato = localStorage.getItem(CLAVE_PREFERENCIAS);
+      return dato ? (JSON.parse(dato) as PreferenciasGuardadas) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  guardarPreferencias(preferencias: PreferenciasGuardadas): void {
+    try {
+      localStorage.setItem(CLAVE_PREFERENCIAS, JSON.stringify(preferencias));
     } catch {
       /* sin almacenamiento disponible */
     }

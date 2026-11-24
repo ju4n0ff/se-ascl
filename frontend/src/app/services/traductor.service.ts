@@ -37,6 +37,7 @@ export class TraductorService {
   private readonly _guardar = signal(false);
   private readonly _resultado = signal<MsgPrediccion | null>(null);
   private readonly _frase = signal<readonly string[]>([]);
+  private readonly _recientes = signal<readonly string[]>([]);
   private readonly _aviso = signal<string | null>(null);
   private readonly _fps = signal(0);
   private readonly _manos = signal({ izquierda: false, derecha: false });
@@ -48,6 +49,7 @@ export class TraductorService {
   readonly guardar = computed(() => this._guardar() && this.sesion.autenticado());
   readonly resultado = this._resultado.asReadonly();
   readonly frase = computed(() => this._frase().join(' '));
+  readonly recientes = this._recientes.asReadonly();
   readonly aviso = this._aviso.asReadonly();
   readonly fps = this._fps.asReadonly();
   readonly manos = this._manos.asReadonly();
@@ -170,6 +172,18 @@ export class TraductorService {
 
   limpiarFrase(): void {
     this._frase.set([]);
+    this._recientes.set([]);
+  }
+
+  async copiarFrase(): Promise<void> {
+    const texto = this.frase();
+    if (!texto) return;
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.avisar('Frase copiada al portapapeles.');
+    } catch {
+      this.avisar('No se pudo copiar. Selecciona el texto y cópialo manualmente.');
+    }
   }
 
   // ------------------------------------------------------------------ interno
@@ -247,6 +261,7 @@ export class TraductorService {
     const { texto } = p.prediccion;
     // Como test_local.py: no se repite la misma seña consecutiva.
     this._frase.update((f) => (f.at(-1) === texto ? f : [...f, texto]));
+    this._recientes.update((r) => [...r.filter((t) => t !== texto), texto].slice(-3));
     this.voz.anunciar(texto);
   }
 

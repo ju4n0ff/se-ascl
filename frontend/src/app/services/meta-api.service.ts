@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ClasesResponse, HealthResponse } from '../models/meta.model';
+import { ClasesResponse, HealthResponse, ReferenciaSenaResponse } from '../models/meta.model';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -14,5 +14,11 @@ export class MetaApiService {
 
   clases(): Observable<ClasesResponse> {
     return this.api.get<ClasesResponse>('api/clases');
+  }
+
+  referencia(claseRaw: string): Observable<ReferenciaSenaResponse> {
+    return this.api.get<ReferenciaSenaResponse>(
+      `api/referencias/${encodeURIComponent(claseRaw)}`,
+    );
   }
 }
