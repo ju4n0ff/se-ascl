@@ -1,0 +1,2656 @@
+<!DOCTYPE html>
+<html lang="es-CL" data-tema="oscuro"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual Técnico, de Uso y de Entrega · SeñaCL · Hito 3</title>
+<meta name="description" content="Manual técnico, manual de uso, instalación, operación y centro de entrega del Hito 3 de SeñaCL: traductor de Lengua de Señas Chilena en tiempo real.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23174a78'/%3E%3Cpath d='M20 38c0-8 5-14 12-14s12 6 12 14' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='46' r='4' fill='%23d9b98f'/%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   SeñaCL · Manual Hito 3 — hoja de estilos autocontenida
+   Paleta: azul bandera, verde cordillera, arena Atacama.
+   ============================================================ */
+:root{
+  --fondo:#eef2ee;
+  --fondo-2:#e6ece7;
+  --superficie:#ffffff;
+  --superficie-2:#f7faf8;
+  --superficie-3:#eff5f1;
+  --tinta:#14212b;
+  --tinta-suave:#51616e;
+  --tinta-tenue:#71808c;
+  --linea:#d7e2dc;
+  --linea-fuerte:#b9cbc0;
+  --azul:#174a78;
+  --azul-2:#1e6aa8;
+  --azul-3:#0d2e4f;
+  --azul-suave:#e7f0f8;
+  --verde:#2f6b4f;
+  --verde-2:#3f8a66;
+  --verde-suave:#e8f3ed;
+  --rojo:#c8413a;
+  --rojo-suave:#fbeae8;
+  --ambar:#a86400;
+  --ambar-suave:#fdf3e2;
+  --arena:#d9b98f;
+  --arena-suave:#f7efe4;
+  --sombra:0 1px 2px rgb(20 33 43 / .05),0 10px 30px rgb(20 33 43 / .06);
+  --sombra-alta:0 20px 60px rgb(13 46 79 / .16);
+  --radio:16px;
+  --radio-sm:10px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --hero-1:#08203a;
+  --hero-2:#123f6b;
+  --hero-3:#1b5f93;
+  color-scheme:light;
+}
+html[data-tema="oscuro"]{
+  --fondo:#0d151c;
+  --fondo-2:#0a1117;
+  --superficie:#141f28;
+  --superficie-2:#18242e;
+  --superficie-3:#1d2b36;
+  --tinta:#e8f0f4;
+  --tinta-suave:#a9bcc7;
+  --tinta-tenue:#8497a3;
+  --linea:#2a3b47;
+  --linea-fuerte:#3c5362;
+  --azul:#8fc4e8;
+  --azul-2:#6fb0dd;
+  --azul-3:#c6e2f4;
+  --azul-suave:#152c3d;
+  --verde:#77c09a;
+  --verde-2:#8fd4b0;
+  --verde-suave:#142a22;
+  --rojo:#ef6a62;
+  --rojo-suave:#341a1a;
+  --ambar:#e0a94a;
+  --ambar-suave:#332612;
+  --arena:#c8a98a;
+  --arena-suave:#2b241b;
+  --sombra:0 1px 2px rgb(0 0 0 / .3),0 12px 32px rgb(0 0 0 / .25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:130px}
+body{
+  margin:0;background:var(--fondo);color:var(--tinta);
+  font-family:var(--sans);font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+img,svg{max-width:100%}
+a{color:var(--azul);text-underline-offset:3px}
+a:hover{color:var(--azul-2)}
+button{font:inherit;color:inherit}
+h1,h2,h3,h4{line-height:1.22;letter-spacing:-.01em;margin:0 0 .45em}
+h2{font-size:clamp(1.45rem,1.1rem + 1.1vw,2rem)}
+h3{font-size:clamp(1.1rem,.98rem + .5vw,1.35rem)}
+h4{font-size:1.02rem}
+p{margin:0 0 1em}
+ul,ol{margin:0 0 1em;padding-left:1.25em}
+li{margin:.28em 0}
+strong{font-weight:650}
+code{font-size:.88em;background:var(--superficie-3);border:1px solid var(--linea);
+  padding:.12em .38em;border-radius:6px;white-space:nowrap;
+}
+kbd{
+  font-size:.8em;background:var(--superficie);border:1px solid var(--linea-fuerte);
+  border-bottom-width:2px;border-radius:6px;padding:.1em .4em;
+}
+hr{border:0;border-top:1px solid var(--linea);margin:2rem 0}
+::selection{background:var(--arena);color:#14212b}
+:focus-visible{outline:3px solid var(--azul-2);outline-offset:2px;border-radius:4px}
+
+.salto{position:absolute;left:-999px;top:8px;z-index:200;background:var(--superficie);color:var(--tinta);padding:.7rem 1rem;border-radius:10px;box-shadow:var(--sombra)}
+.salto:focus{left:8px}
+
+/* ---------- barra superior ---------- */
+.barra{
+  position:sticky;top:0;z-index:80;background:color-mix(in srgb,var(--superficie) 88%,transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--linea);
+}
+.barra-int{max-width:1480px;margin:0 auto;padding:.55rem 1.1rem;display:flex;align-items:center;gap:.65rem}
+.marca{display:flex;align-items:center;gap:.55rem;text-decoration:none;color:var(--tinta);font-weight:700;letter-spacing:-.02em}
+.marca svg{width:34px;height:34px;flex:none}
+.marca small{display:block;font-weight:500;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-tenue);margin-top:-3px}
+.barra .crece{flex:1}
+.icono-boton{
+  display:inline-flex;align-items:center;justify-content:center;gap:.45rem;
+  min-width:42px;min-height:42px;padding:.45rem .7rem;border:1px solid var(--linea);
+  background:var(--superficie);border-radius:11px;cursor:pointer;color:var(--tinta-suave);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.icono-boton:hover{background:var(--superficie-3);color:var(--tinta);border-color:var(--linea-fuerte)}
+.icono-boton .txt{font-size:.86rem;font-weight:600}
+.barra-progreso{position:absolute;left:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--verde),var(--azul-2));width:0;transition:width .1s linear}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;overflow:hidden;color:#f6fbff;
+  background:
+    radial-gradient(900px 420px at 82% -10%,rgb(255 255 255 / .18),transparent 62%),
+    radial-gradient(620px 380px at 8% 110%,rgb(217 185 143 / .22),transparent 60%),
+    linear-gradient(118deg,var(--hero-1) 0%,var(--hero-2) 46%,var(--hero-3) 100%);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;opacity:.16;pointer-events:none;
+  background-image:linear-gradient(rgb(255 255 255 / .35) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255 / .35) 1px,transparent 1px);
+  background-size:46px 46px;mask-image:linear-gradient(to bottom,black,transparent 78%);
+}
+.hero::after{
+  content:"HITO 3";position:absolute;right:-1.5rem;bottom:-3.4rem;font-weight:800;
+  font-size:clamp(7rem,16vw,17rem);letter-spacing:-.06em;color:rgb(255 255 255 / .055);pointer-events:none;
+}
+.hero-int{position:relative;z-index:1;max-width:1480px;margin:0 auto;padding:1.15rem 1.35rem 2.1rem}
+.hero-marca{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-bottom:2.2rem}
+.hero-marca .logo{display:flex;align-items:center;gap:.65rem;font-weight:750;font-size:1.1rem}
+.hero-marca .logo svg{width:40px;height:40px}
+.hero-marca .logo span small{display:block;font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;opacity:.72;font-weight:600;margin-top:-2px}
+.hero-marca .crece{flex:1}
+.sello{
+  display:inline-flex;align-items:center;gap:.5rem;border:1px solid rgb(255 255 255 / .28);
+  background:rgb(255 255 255 / .1);border-radius:999px;padding:.4rem .8rem;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;
+}
+.sello::before{content:"";width:7px;height:7px;border-radius:50%;background:#7ee0a6;box-shadow:0 0 0 3px rgb(126 224 166 / .2)}
+.hero h1{
+  font-size:clamp(2rem,1.2rem + 3.2vw,3.5rem);font-weight:800;letter-spacing:-.035em;
+  max-width:19ch;margin-bottom:.3em;text-wrap:balance;
+}
+.hero .bajada{font-size:clamp(1rem,.9rem + .5vw,1.2rem);max-width:62ch;opacity:.9;margin-bottom:1.4rem}
+.meta-fila{display:flex;flex-wrap:wrap;gap:.45rem .5rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em}
+.meta-fila span{border:1px solid rgb(255 255 255 / .2);background:rgb(0 0 0 / .13);border-radius:7px;padding:.32rem .55rem}
+.aviso-doc{
+  display:flex;gap:.75rem;align-items:flex-start;margin-top:1.7rem;padding:.85rem 1rem;
+  border:1px solid rgb(255 210 120 / .45);background:rgb(255 196 90 / .13);
+  border-radius:11px;max-width:900px;font-size:.86rem;line-height:1.5;
+}
+.aviso-doc b{color:#ffd98c}
+.aviso-doc svg{flex:none;width:20px;height:20px;margin-top:1px;color:#ffd98c}
+
+/* ---------- índice ---------- */
+.contenedor{max-width:1480px;margin:0 auto;padding:0 1.35rem}
+.indice{
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--radio);
+  box-shadow:var(--sombra);padding:1.3rem 1.35rem 1.1rem;margin:-1.35rem auto 1.1rem;position:relative;z-index:2;
+}
+.indice-cab{display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem}
+.indice-cab h2{font-size:1.02rem;letter-spacing:.01em;margin:0}
+.indice-cab .nota{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-tenue)}
+.indice-grid{display:grid;grid-template-columns:1fr 1fr;gap:.1rem 1.6rem}
+.indice-item{
+  display:flex;gap:.7rem;align-items:flex-start;text-align:left;background:none;border:0;
+  padding:.48rem .35rem;border-radius:9px;cursor:pointer;width:100%;
+}
+.indice-item:hover{background:var(--superficie-3)}
+.indice-item .n{
+  font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--azul);
+  min-width:1.5rem;padding-top:.15rem;
+}
+.indice-item .t{font-weight:600;font-size:.94rem;line-height:1.35;display:block}
+.indice-item .d{display:block;font-size:.76rem;color:var(--tinta-tenue);line-height:1.4;margin-top:.1rem}
+.indice-pie{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;align-items:center;justify-content:space-between;border-top:1px solid var(--linea);margin-top:.8rem;padding-top:.75rem;font-size:.78rem;color:var(--tinta-suave)}
+.indice-pie .estado{display:flex;flex-wrap:wrap;gap:.45rem 1rem}
+.punto{display:inline-flex;align-items:center;gap:.38rem}
+.punto i{width:8px;height:8px;border-radius:50%;background:var(--verde-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--verde-2) 18%,transparent)}
+.punto.ambar i{background:var(--ambar);box-shadow:0 0 0 3px color-mix(in srgb,var(--ambar) 18%,transparent)}
+
+/* ---------- pestañas ---------- */
+.pestanas{
+  position:sticky;top:55px;z-index:70;background:color-mix(in srgb,var(--fondo) 92%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--linea);margin-bottom:1.2rem;
+}
+.pestanas-int{max-width:1480px;margin:0 auto;padding:0 1.35rem;display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.pestanas-int::-webkit-scrollbar{display:none}
+.pestana{
+  position:relative;background:none;border:0;padding:.85rem .95rem .75rem;cursor:pointer;
+  font-size:.86rem;font-weight:600;color:var(--tinta-suave);white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.pestana:hover{color:var(--tinta)}
+.pestana[aria-selected="true"]{color:var(--azul);border-bottom-color:var(--azul)}
+.pestana .num{font-family:var(--mono);font-size:.68rem;opacity:.65;margin-right:.35rem}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:264px minmax(0,1fr);gap:2rem;align-items:start;padding-bottom:3rem}
+.lateral{position:sticky;top:112px;max-height:calc(100vh - 130px);overflow:auto;padding-right:.2rem;scrollbar-width:thin}
+.tarjeta-lado{background:var(--superficie);border:1px solid var(--linea);border-radius:var(--radio-sm);padding:.8rem .85rem;margin-bottom:.9rem}
+.tarjeta-lado h3{font-size:.68rem;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-tenue);margin-bottom:.55rem}
+.salud{display:grid;gap:.42rem;font-size:.78rem}
+.salud div{display:flex;justify-content:space-between;gap:.5rem;align-items:center}
+.salud b{font-weight:600;font-size:.76rem}
+.mini-barra{height:5px;border-radius:99px;background:var(--superficie-3);overflow:hidden;margin-top:.55rem}
+.mini-barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--verde),var(--azul-2))}
+.lateral nav{display:grid;gap:.1rem}
+.lateral nav a{
+  display:block;padding:.34rem .55rem;border-left:2px solid var(--linea);text-decoration:none;
+  color:var(--tinta-suave);font-size:.79rem;line-height:1.35;
+}
+.lateral nav a:hover{color:var(--tinta);background:var(--superficie-3)}
+.lateral nav a.activo{color:var(--azul);border-left-color:var(--azul);font-weight:600;background:var(--azul-suave)}
+.lateral .volver{font-size:.75rem;color:var(--tinta-tenue);display:inline-block;margin-top:.75rem;text-decoration:none}
+.lateral .volver:hover{color:var(--azul)}
+
+/* ---------- paneles y secciones ---------- */
+.panel{display:none;min-width:0;animation:entrar .22s ease-out}
+.panel.activo{display:block}
+@keyframes entrar{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.seccion{
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:1.5rem 1.55rem;margin-bottom:1.1rem;box-shadow:var(--sombra);scroll-margin-top:130px;
+}
+.seccion>h2{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem}
+.chip{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:30px;height:30px;border-radius:9px;background:var(--azul);color:#fff;
+  font-family:var(--mono);font-size:.78rem;font-weight:700;box-shadow:0 3px 8px rgb(23 74 120 / .25);
+}
+.entradilla{color:var(--tinta-suave);font-size:.94rem;max-width:82ch;margin-bottom:1.1rem}
+.seccion h3{margin-top:1.5rem;color:var(--azul-3)}
+.seccion h3:first-of-type{margin-top:1rem}
+.seccion h4{margin-top:1.1rem}
+.seccion p,.seccion li{font-size:.93rem}
+.seccion ul,.seccion ol{padding-left:1.15rem}
+.ancla{scroll-margin-top:130px}
+
+/* ---------- tarjetas / grids ---------- */
+.grid{display:grid;gap:.8rem}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tarjeta{background:var(--superficie-2);border:1px solid var(--linea);border-radius:var(--radio-sm);padding:1rem 1.05rem}
+.tarjeta h4{margin:0 0 .35rem;font-size:.95rem}
+.tarjeta p:last-child,.tarjeta ul:last-child{margin-bottom:0}
+.tarjeta .etiqueta{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-tenue);display:block;margin-bottom:.3rem}
+.dato{font-size:1.55rem;font-weight:750;letter-spacing:-.03em;line-height:1.1;display:block}
+.dato.peq{font-size:1.2rem}
+.dato+small{color:var(--tinta-tenue);font-size:.75rem}
+
+/* ---------- avisos ---------- */
+.aviso{border-radius:var(--radio-sm);padding:.85rem 1rem .85rem 1.05rem;margin:1rem 0;border:1px solid var(--linea);border-left-width:4px;background:var(--superficie-2);font-size:.9rem}
+.aviso p:last-child,.aviso ul:last-child{margin-bottom:0}
+.aviso b{display:block;margin-bottom:.15rem}
+.aviso.info{border-left-color:var(--azul-2);background:var(--azul-suave)}
+.aviso.ok{border-left-color:var(--verde);background:var(--verde-suave)}
+.aviso.warn{border-left-color:var(--ambar);background:var(--ambar-suave)}
+.aviso.peligro{border-left-color:var(--rojo);background:var(--rojo-suave)}
+.aviso code{background:color-mix(in srgb,var(--superficie) 70%,transparent)}
+
+/* ---------- píldoras / badges ---------- */
+.pill{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.14rem .5rem;font-size:.7rem;font-weight:600;border:1px solid var(--linea);background:var(--superficie-3);color:var(--tinta-suave);white-space:nowrap}
+.pill.ok{background:var(--verde-suave);color:var(--verde);border-color:color-mix(in srgb,var(--verde) 35%,transparent)}
+.pill.warn{background:var(--ambar-suave);color:var(--ambar);border-color:color-mix(in srgb,var(--ambar) 35%,transparent)}
+.pill.bad{background:var(--rojo-suave);color:var(--rojo);border-color:color-mix(in srgb,var(--rojo) 35%,transparent)}
+.pill.azul{background:var(--azul-suave);color:var(--azul);border-color:color-mix(in srgb,var(--azul) 30%,transparent)}
+.pill.mono{font-family:var(--mono);font-size:.66rem;letter-spacing:.02em}
+
+/* ---------- tablas ---------- */
+.tabla-envoltura{overflow-x:auto;border:1px solid var(--linea);border-radius:var(--radio-sm);margin:1rem 0;background:var(--superficie)}
+table{width:100%;border-collapse:collapse;font-size:.84rem;min-width:560px}
+th,td{padding:.6rem .7rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--linea)}
+th{background:var(--superficie-3);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tinta-suave);font-weight:700;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:color-mix(in srgb,var(--superficie-3) 55%,transparent)}
+td code{white-space:nowrap}
+.tabla-mini{font-size:.8rem}
+.tabla-mini th,.tabla-mini td{padding:.45rem .55rem}
+
+/* ---------- código ---------- */
+.bloque-codigo{position:relative;margin:1rem 0;border:1px solid #24384a;border-radius:var(--radio-sm);overflow:hidden;background:#0e1b26}
+.bloque-codigo .barra-codigo{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.35rem .45rem .35rem .75rem;background:#132433;border-bottom:1px solid #24384a}
+.bloque-codigo .barra-codigo span{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:#8fb0c6}
+.bloque-codigo pre{margin:0;padding:.85rem 1rem;overflow:auto;color:#dceaf4;font-family:var(--mono);font-size:.79rem;line-height:1.55;tab-size:2}
+.bloque-codigo pre code{background:none;border:0;padding:0;white-space:pre;color:inherit;font-size:inherit}
+.copiar{border:1px solid #33506a;background:#1a3042;color:#c7dced;border-radius:7px;padding:.28rem .55rem;font-size:.7rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+.copiar:hover{background:#25445c}
+.copiar.hecho{background:var(--verde);border-color:var(--verde);color:#fff}
+
+/* ---------- detalles / acordeón ---------- */
+details{border:1px solid var(--linea);border-radius:var(--radio-sm);background:var(--superficie-2);margin:.6rem 0;overflow:hidden}
+details[open]{background:var(--superficie)}
+summary{cursor:pointer;padding:.7rem .9rem;font-weight:600;font-size:.9rem;list-style:none;display:flex;align-items:center;gap:.55rem}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--mono);color:var(--azul);font-weight:700;width:1rem;flex:none}
+details[open] summary::before{content:"−"}
+summary:hover{background:var(--superficie-3)}
+.detalle-cuerpo{padding:0 .95rem .9rem 2.45rem;font-size:.9rem}
+.detalle-cuerpo p:last-child,.detalle-cuerpo ul:last-child{margin-bottom:0}
+
+/* ---------- diagramas ---------- */
+.diagrama{background:var(--superficie-2);border:1px solid var(--linea);border-radius:var(--radio-sm);padding:1rem;margin:1rem 0;overflow-x:auto}
+.diagrama svg{display:block;width:100%;height:auto;min-width:620px}
+.diagrama figcaption{font-size:.75rem;color:var(--tinta-tenue);margin-top:.55rem;text-align:center}
+.pasos{display:grid;gap:.55rem;counter-reset:paso}
+.paso{display:grid;grid-template-columns:auto 1fr;gap:.7rem;align-items:start;background:var(--superficie-2);border:1px solid var(--linea);border-radius:var(--radio-sm);padding:.7rem .8rem}
+.paso::before{counter-increment:paso;content:counter(paso);width:24px;height:24px;border-radius:50%;background:var(--azul-suave);color:var(--azul);display:grid;place-items:center;font-family:var(--mono);font-size:.72rem;font-weight:700}
+.paso b{display:block;font-size:.9rem}
+.paso span{font-size:.83rem;color:var(--tinta-suave)}
+
+/* ---------- checklist ---------- */
+.resumen-check{display:grid;grid-template-columns:auto 1fr;gap:1.2rem;align-items:center;background:var(--superficie-2);border:1px solid var(--linea);border-radius:var(--radio);padding:1.1rem 1.2rem;margin:1rem 0 1.2rem}
+.anillo{position:relative;width:104px;height:104px;flex:none}
+.anillo svg{transform:rotate(-90deg)}
+.anillo .centro{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.05}
+.anillo .centro b{font-size:1.45rem;letter-spacing:-.04em;display:block}
+.anillo .centro small{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tinta-tenue)}
+.resumen-check .txt b{font-size:1rem}
+.resumen-check .txt p{font-size:.8rem;color:var(--tinta-suave);margin:.2rem 0 0}
+.barras{display:grid;gap:.45rem;margin-top:.7rem}
+.barra-linea{display:grid;grid-template-columns:2.4rem 1fr 4.6rem;gap:.5rem;align-items:center;font-size:.72rem;font-family:var(--mono);color:var(--tinta-suave)}
+.barra-linea .tubo{height:6px;border-radius:99px;background:var(--superficie-3);overflow:hidden}
+.barra-linea .tubo i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--azul-2),var(--verde));transition:width .25s}
+.criterio{border:1px solid var(--linea);border-radius:var(--radio-sm);background:var(--superficie);margin:.7rem 0;overflow:hidden}
+.criterio-cab{display:flex;align-items:center;gap:.7rem;padding:.7rem .85rem;background:var(--superficie-2);border-bottom:1px solid var(--linea);flex-wrap:wrap}
+.criterio-cab .cod{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--azul);background:var(--azul-suave);border-radius:6px;padding:.15rem .4rem}
+.criterio-cab h4{margin:0;font-size:.93rem;flex:1;min-width:12rem}
+.criterio-cab .peso{font-family:var(--mono);font-size:.7rem;color:var(--tinta-suave)}
+.criterio-cab .avance{margin-left:auto;font-family:var(--mono);font-size:.68rem;color:var(--tinta-suave)}
+.criterio-cab .avance b{color:var(--azul)}
+.criterio .items{padding:.45rem .55rem .55rem}
+.check{display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:start;padding:.42rem .4rem;border-radius:8px;cursor:pointer}
+.check:hover{background:var(--superficie-3)}
+.check input{margin:.25rem 0 0;width:18px;height:18px;accent-color:var(--verde);cursor:pointer;flex:none}
+.check span{font-size:.84rem;line-height:1.45}
+.check small{display:block;color:var(--tinta-tenue);font-size:.75rem;line-height:1.4;margin-top:.05rem}
+.check input:checked+span{color:var(--tinta-tenue)}
+.check input:checked+span b{text-decoration:line-through;text-decoration-color:var(--verde);text-decoration-thickness:2px}
+.acciones-check{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.9rem}
+.boton{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem .9rem;border-radius:10px;border:1px solid var(--azul);background:var(--azul);color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none}
+.boton:hover{background:var(--azul-2);border-color:var(--azul-2);color:#fff}
+.boton.sec{background:var(--superficie);color:var(--tinta);border-color:var(--linea-fuerte)}
+.boton.sec:hover{background:var(--superficie-3);color:var(--tinta)}
+.boton.peligro{background:var(--rojo);border-color:var(--rojo)}
+.boton.peligro:hover{background:#a8322c;border-color:#a8322c}
+.boton:disabled{opacity:.55;cursor:not-allowed}
+
+/* ---------- línea de tiempo ---------- */
+.linea-tiempo{position:relative;margin:1rem 0;padding-left:1.2rem}
+.linea-tiempo::before{content:"";position:absolute;left:5px;top:.4rem;bottom:.4rem;width:2px;background:var(--linea)}
+.hito-t{position:relative;margin-bottom:1rem}
+.hito-t::before{content:"";position:absolute;left:-1.2rem;top:.35rem;width:12px;height:12px;border-radius:50%;background:var(--superficie);border:2px solid var(--azul)}
+.hito-t b{display:block;font-size:.9rem}
+.hito-t span{font-size:.8rem;color:var(--tinta-suave)}
+.hito-t .fecha{font-family:var(--mono);font-size:.68rem;color:var(--verde);display:block}
+
+/* ---------- buscador ---------- */
+.buscador{position:fixed;inset:0;z-index:120;display:none;background:rgb(6 20 32 / .55);backdrop-filter:blur(4px);padding:8vh 1rem 1rem}
+.buscador.abierto{display:block}
+.buscador-caja{max-width:720px;margin:0 auto;background:var(--superficie);border:1px solid var(--linea-fuerte);border-radius:18px;box-shadow:var(--sombra-alta);overflow:hidden}
+.buscador-cab{display:flex;align-items:center;gap:.6rem;padding:.7rem .85rem;border-bottom:1px solid var(--linea)}
+.buscador-cab svg{width:20px;height:20px;color:var(--tinta-tenue);flex:none}
+.buscador-cab input{flex:1;border:0;background:none;font-size:1rem;color:var(--tinta);outline:none;min-width:0}
+.buscador-cab kbd{flex:none}
+.resultados{max-height:56vh;overflow:auto;padding:.4rem}
+.resultado{display:block;width:100%;text-align:left;border:0;background:none;padding:.6rem .7rem;border-radius:9px;cursor:pointer}
+.resultado:hover,.resultado.sel{background:var(--superficie-3)}
+.resultado b{display:block;font-size:.88rem;color:var(--tinta)}
+.resultado .ruta{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--azul);display:block;margin-bottom:.1rem}
+.resultado span{font-size:.77rem;color:var(--tinta-tenue);display:block;line-height:1.4;margin-top:.1rem}
+.vacio-busca{padding:1.2rem;text-align:center;color:var(--tinta-tenue);font-size:.85rem}
+
+/* ---------- aviso flotante ---------- */
+.toast{position:fixed;left:50%;bottom:1.2rem;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:150;background:#0e1b26;color:#e8f2f8;border:1px solid #33506a;border-radius:10px;padding:.6rem .9rem;font-size:.82rem;box-shadow:var(--sombra-alta);transition:opacity .2s,transform .2s}
+.toast.visible{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- pie ---------- */
+.pie{border-top:1px solid var(--linea);background:var(--superficie);padding:1.6rem 0 2rem;margin-top:1rem}
+.pie-int{max-width:1480px;margin:0 auto;padding:0 1.35rem;display:flex;gap:1.2rem;justify-content:space-between;flex-wrap:wrap;align-items:flex-start}
+.pie p{font-size:.78rem;color:var(--tinta-tenue);margin:.2rem 0 0;max-width:60ch}
+.pie .firma{display:flex;align-items:center;gap:.6rem;font-weight:700}
+.pie .firma svg{width:28px;height:28px}
+
+/* ---------- utilidades ---------- */
+.oculto{display:none!important}
+.mono{font-family:var(--mono)}
+.suave{color:var(--tinta-suave)}
+.tenue{color:var(--tinta-tenue);font-size:.82rem}
+.chico{font-size:.8rem}
+.solo-lectores{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sep{height:1px;background:var(--linea);margin:1.2rem 0}
+.fila{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.lista-limpia{list-style:none;padding:0;margin:0}
+.lista-limpia li{display:flex;gap:.55rem;align-items:flex-start;padding:.38rem 0;border-bottom:1px solid var(--linea);font-size:.86rem}
+.lista-limpia li:last-child{border-bottom:0}
+.lista-limpia .ic{flex:none;width:18px;height:18px;color:var(--verde);margin-top:.15rem}
+.lista-limpia .ic.x{color:var(--rojo)}
+.lista-limpia .ic.a{color:var(--ambar)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .layout{grid-template-columns:1fr;gap:0}
+  .lateral{position:static;max-height:none;order:-1;margin-bottom:1rem;padding:0}
+  .tarjeta-lado.salud-lado{display:none}
+  .lateral nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:.15rem .5rem}
+  .lateral nav a{border-left:0;border-bottom:1px solid var(--linea);padding:.4rem .3rem}
+  .lateral nav a.activo{border-left:0;border-bottom-color:var(--azul)}
+  .grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .hero-int{padding:1rem 1rem 1.6rem}
+  .contenedor{padding:0 1rem}
+  .indice{margin:-1rem .6rem 1rem;padding:1rem}
+  .indice-grid{grid-template-columns:1fr}
+  .pestanas-int{padding:0 .6rem}
+  .pestana{padding:.75rem .6rem;font-size:.8rem}
+  .pestana .num{display:none}
+  .seccion{padding:1.15rem 1rem;border-radius:12px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .resumen-check{grid-template-columns:1fr;text-align:center;justify-items:center}
+  .barra .txt{display:none}
+  .barra-int{padding:.45rem .6rem}
+  .lateral nav{grid-template-columns:1fr}
+  .tabla-envoltura{border-radius:8px}
+  table{min-width:520px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+
+/* ---------- sub-pestañas de sistema operativo ---------- */
+.os-tabs{border:1px solid var(--linea);border-radius:var(--radio-sm);overflow:hidden;margin:1rem 0;background:var(--superficie)}
+.os-botones{display:flex;flex-wrap:wrap;gap:.25rem;padding:.35rem;background:var(--superficie-2);border-bottom:1px solid var(--linea)}
+.os-boton{border:1px solid transparent;background:none;border-radius:7px;padding:.4rem .7rem;font-size:.78rem;font-weight:600;color:var(--tinta-suave);cursor:pointer}
+.os-boton:hover{background:var(--superficie-3);color:var(--tinta)}
+.os-boton.activo{background:var(--superficie);color:var(--azul);border-color:var(--linea);box-shadow:0 1px 2px rgb(20 33 43 / .06)}
+.os-panel{padding:.15rem .65rem .6rem}
+.os-panel[hidden]{display:none}
+.os-panel .bloque-codigo{margin:.55rem 0}
+
+/* ---------- impresión ---------- */
+@media print{
+  :root{--fondo:#fff;--superficie:#fff;--superficie-2:#fff;--superficie-3:#f4f6f5;--tinta:#111;--tinta-suave:#333;--linea:#bbb;--sombra:none}
+  .barra,.pestanas,.lateral,.buscador,.toast,.copiar,.acciones-check,.indice,.pie,.salto{display:none!important}
+  .hero{background:#123f6b!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hero::after{display:none}
+  .contenedor{padding:0}
+  .layout{display:block;padding:0}
+  .panel{display:block!important;animation:none}
+  .panel[data-panel]:not(.activo){page-break-before:always}
+  .seccion{box-shadow:none;border-color:#bbb;page-break-inside:avoid;margin-bottom:.7rem}
+  details{border-color:#bbb}
+  details:not([open]) .detalle-cuerpo{display:block}
+  a{color:#111;text-decoration:none}
+  a[href^="http"]::after{content:" (" attr(href) ")";font-size:.7em;color:#555;word-break:break-all}
+  .bloque-codigo{border-color:#999;background:#f7f7f7}
+  .bloque-codigo pre{color:#111}
+  .bloque-codigo .barra-codigo{background:#eee;border-color:#ccc}
+  .bloque-codigo .barra-codigo span{color:#333}
+}
+</style>
+</head>
+<body>
+<a class="salto" href="#contenido">Saltar al contenido</a>
+
+<div class="barra">
+  <div class="barra-int">
+    <a class="marca" href="#resumen" aria-label="SeñaCL, ir al inicio del manual">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#174a78"></rect><path d="M20 38c0-8 5-14 12-14s12 6 12 14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"></path><circle cx="32" cy="46" r="4" fill="#d9b98f"></circle></svg>
+      <span>SeñaCL<small>Manual Hito 3</small></span>
+    </a>
+    <span class="crece"></span>
+    <button class="icono-boton" id="abrir-buscador" aria-label="Buscar en el manual (tecla /)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <span class="txt">Buscar</span>
+    </button>
+    <button class="icono-boton" id="tema" aria-label="Cambiar a tema claro" title="Tema claro">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"></path></svg>
+    </button>
+    <button class="icono-boton" id="imprimir" aria-label="Imprimir o guardar como PDF" title="Imprimir / PDF">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"></path><rect x="3" y="9" width="18" height="8" rx="2"></rect><path d="M6 14h12v7H6z"></path></svg>
+      <span class="txt">PDF</span>
+    </button>
+  </div>
+  <div class="barra-progreso" id="barra-progreso" style="width: 0%;"></div>
+</div>
+
+<header class="hero" id="inicio">
+  <div class="hero-int">
+    <div class="hero-marca">
+      <div class="logo">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#fff" fill-opacity=".12" stroke="#fff" stroke-opacity=".35"></rect><path d="M20 38c0-8 5-14 12-14s12 6 12 14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"></path><circle cx="32" cy="46" r="4" fill="#d9b98f"></circle></svg>
+        <span>SeñaCL<small>Universidad Mayor · INGT1003</small></span>
+      </div>
+      <span class="crece"></span>
+      <span class="sello">Documento de entrega · Hito 3</span>
+    </div>
+    <h1>Manual Técnico, de Uso y de Entrega</h1>
+    <p class="bajada">Traductor de Lengua de Señas Chilena en tiempo real. Arquitectura, operación, instalación reproducible y checklist para la revisión del producto.</p>
+    <div class="meta-fila">
+      <span>Generado 2026-11-23</span>
+      <span>Última verificación 2026-11-23</span>
+      <span>Versión 3.0 · Hito 3</span>
+      <span>89 señas · 1629 floats/cuadro</span>
+    </div>
+    <div class="aviso-doc" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"></path><path d="M12 9v5"></path><circle cx="12" cy="17.5" r=".8" fill="currentColor"></circle></svg>
+      <div><b>Documento sin credenciales.</b> Los secretos reales viven en el panel de Render y en Supabase, nunca en el repositorio ni en este archivo. Los valores de ejemplo son marcadores.</div>
+    </div>
+  </div>
+</header>
+
+<div class="contenedor">
+  <section class="indice" aria-labelledby="indice-titulo">
+    <div class="indice-cab">
+      <h2 id="indice-titulo">Contenido</h2>
+      <span class="nota">6 capítulos · lectura 25 min · revisión 10 min</span>
+    </div>
+    <div class="indice-grid" id="indice-grid">
+      <button class="indice-item" data-ir="resumen"><span class="n">01</span><span><span class="t">Resumen y estado del producto</span><span class="d">Qué promete, qué está desplegado y qué falta para el cierre.</span></span></button>
+      <button class="indice-item" data-ir="tecnico"><span class="n">02</span><span><span class="t">Manual técnico</span><span class="d">Arquitectura, modelo v3, API REST, WebSocket, datos, seguridad y QA.</span></span></button>
+      <button class="indice-item" data-ir="uso"><span class="n">03</span><span><span class="t">Manual de uso</span><span class="d">Recorrido del evaluador, modos, glosario, historial, perfil y accesibilidad.</span></span></button>
+      <button class="indice-item" data-ir="instalacion"><span class="n">04</span><span><span class="t">Instalación y despliegue</span><span class="d">Local en Windows y Linux, Supabase, Render, Vercel y verificación.</span></span></button>
+      <button class="indice-item" data-ir="entrega"><span class="n">05</span><span><span class="t">Centro de entrega</span><span class="d">Checklist interactiva, rúbrica de 100 puntos, brechas y bitácora.</span></span></button>
+      <button class="indice-item" data-ir="demo"><span class="n">06</span><span><span class="t">Demo, fallas y video</span><span class="d">Guion de 7 minutos, solución de problemas y storyboard de 2 minutos.</span></span></button>
+    </div>
+    <div class="indice-pie">
+      <div class="estado">
+        <span class="punto"><i></i> API <b>en línea</b></span>
+        <span class="punto"><i></i> Web <b>en línea</b></span>
+        <span class="punto"><i></i> Repositorio <b>71 commits</b></span>
+        <span class="punto ambar"><i></i> Documentación final <b>pendiente</b></span>
+      </div>
+      <span class="mono">Checklist guardada en este navegador</span>
+    </div>
+  </section>
+</div>
+
+<nav class="pestanas" aria-label="Capítulos del manual">
+  <div class="pestanas-int" role="tablist" aria-label="Capítulos">
+    <button class="pestana" role="tab" id="tab-resumen" aria-controls="panel-resumen" aria-selected="true" data-tab="resumen" tabindex="0"><span class="num">01</span>Resumen</button>
+    <button class="pestana" role="tab" id="tab-tecnico" aria-controls="panel-tecnico" aria-selected="false" tabindex="-1" data-tab="tecnico"><span class="num">02</span>Manual técnico</button>
+    <button class="pestana" role="tab" id="tab-uso" aria-controls="panel-uso" aria-selected="false" tabindex="-1" data-tab="uso"><span class="num">03</span>Manual de uso</button>
+    <button class="pestana" role="tab" id="tab-instalacion" aria-controls="panel-instalacion" aria-selected="false" tabindex="-1" data-tab="instalacion"><span class="num">04</span>Instalación</button>
+    <button class="pestana" role="tab" id="tab-entrega" aria-controls="panel-entrega" aria-selected="false" tabindex="-1" data-tab="entrega"><span class="num">05</span>Centro de entrega</button>
+    <button class="pestana" role="tab" id="tab-demo" aria-controls="panel-demo" aria-selected="false" tabindex="-1" data-tab="demo"><span class="num">06</span>Demo y fallas</button>
+  </div>
+</nav>
+
+<main class="contenedor" id="contenido">
+  <div class="layout">
+    <aside class="lateral" aria-label="Navegación del capítulo">
+      <div class="tarjeta-lado salud-lado">
+        <h3>Estado verificado</h3>
+        <div class="salud">
+          <div><span>API Render</span><b><span class="pill ok">200</span></b></div>
+          <div><span>PostgreSQL</span><b><span class="pill ok">ok</span></b></div>
+          <div><span>Modelo v3</span><b><span class="pill ok">loaded</span></b></div>
+          <div><span>Web Vercel</span><b><span class="pill ok">200</span></b></div>
+        </div>
+        <div class="mini-barra" aria-hidden="true"><i style="width:100%"></i></div>
+        <p class="tenue" style="margin:.55rem 0 0">Comprobado el 23-11-2026 contra <code>/api/health</code>.</p>
+      </div>
+      <div class="tarjeta-lado">
+        <h3>En este capítulo</h3>
+        <nav id="subnav" aria-label="Secciones del capítulo"><a href="#r-promesa" class="activo">Promesa y problema</a><a href="#r-estado" class="">Estado verificado del producto</a><a href="#r-evolucion" class="">Evolución Hito 1 → Hito 2 → Hito 3</a><a href="#r-entrega">Qué se entrega y cuándo</a><a href="#r-riesgos">Riesgos que restan puntos</a></nav>
+        <a class="volver" href="#inicio">↑ Volver al índice</a>
+      </div>
+    </aside>
+
+    <div id="paneles">
+      <!-- ================= 01 · RESUMEN ================= -->
+      <section class="panel activo" id="panel-resumen" role="tabpanel" aria-labelledby="tab-resumen" data-panel="resumen">
+
+        <section class="seccion" id="r-promesa" data-titulo="Promesa y problema">
+          <h2><span class="chip">01</span> Promesa y problema</h2>
+          <p class="entradilla">SeñaCL traduce Lengua de Señas Chilena (LSCh) a texto y voz en tiempo real, desde el navegador, sin enviar video. El Hito 3 no agrega una promesa nueva: demuestra que la del Hito 1 funciona de punta a punta.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <span class="etiqueta">La promesa comprometida</span>
+              <p style="font-size:1.02rem;font-weight:600;line-height:1.45;margin-bottom:.5rem">«Traducción automática, unidireccional y en tiempo real de la LSCh a texto y audio, mediante una aplicación web de fácil acceso.»</p>
+              <p class="tenue" style="margin:0">Documento de Propuesta, Hito 1 · 20-09-2026.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="etiqueta">El problema</span>
+              <p style="margin-bottom:.5rem">En Chile, cerca de <strong>dos millones de personas</strong> presentan dificultades auditivas o de comunicación (Censo 2024, citado en el Hito 1). La LSCh es lengua oficial (Ley 21.303), pero la mayoría de los servicios digitales no la ofrecen.</p>
+              <p class="tenue" style="margin:0">La herramienta es de apoyo: no reemplaza a un intérprete certificado.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-4" style="margin-top:.8rem">
+            <div class="tarjeta"><span class="dato">89</span><small>señas reconocidas</small></div>
+            <div class="tarjeta"><span class="dato">1.629</span><small>floats por cuadro</small></div>
+            <div class="tarjeta"><span class="dato">~3–6 ms</span><small>inferencia en CPU</small></div>
+            <div class="tarjeta"><span class="dato">92,5 %</span><small>Top-1 en validación</small></div>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Qué se conserva y qué se amplía.</b> El Hito 1 comprometió tres capas: SPA Angular + MediaPipe que envía landmarks, FastAPI que infiere y PostgreSQL que guarda historial. El Hito 2 construyó el motor y el Hito 3 conecta la interfaz, cierra el ciclo del dato y documenta la operación.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="r-estado" data-titulo="Estado verificado del producto">
+          <h2><span class="chip">02</span> Estado verificado del producto</h2>
+          <p class="entradilla">Estos valores se comprobaron el <strong>23-11-2026</strong>. La tabla distingue lo verificado en vivo de lo que solo consta en el repositorio: no se presenta como funcionando nada que no se haya ejecutado.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Componente</th><th>Dónde</th><th>Estado</th><th>Evidencia</th></tr></thead>
+              <tbody>
+                <tr><td>Frontend Angular</td><td><code>singcl.vercel.app</code></td><td><span class="pill ok">200</span></td><td>Carga sin errores de consola; 6 rutas activas.</td></tr>
+                <tr><td>API FastAPI</td><td><code>se-ascl.onrender.com</code></td><td><span class="pill ok">200</span></td><td><code>/api/health</code> responde <code>status: ok</code>.</td></tr>
+                <tr><td>PostgreSQL</td><td>Supabase (pooler)</td><td><span class="pill ok">ok</span></td><td>El health reporta <code>database: ok</code>.</td></tr>
+                <tr><td>Modelo LSCh v3</td><td>Render</td><td><span class="pill ok">loaded</span></td><td><code>mejor_modelo_lsch.keras</code>, 89 clases, umbral 0,55.</td></tr>
+                <tr><td>Modelo estático (SVM)</td><td>Render</td><td><span class="pill warn">no disponible</span></td><td>Opcional; el modo <code>static</code> responde <code>503</code>.</td></tr>
+                <tr><td>Repositorio</td><td>GitHub <code>ju4n0ff/se-ascl</code></td><td><span class="pill ok">activo</span></td><td>71 commits, rama <code>main</code>, último el 23-11-2026.</td></tr>
+                <tr><td>Base de datos (panel)</td><td>Supabase</td><td><span class="pill warn">no auditada</span></td><td>No se accedió al panel: el navegador del revisor no comparte la sesión. Se validó por <code>schema.sql</code> + <code>supabase_rls.sql</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Comprobar en 30 segundos</h4>
+              <div class="bloque-codigo">
+                <div class="barra-codigo"><span>terminal</span><button class="copiar" type="button">Copiar</button></div>
+                <pre><code>curl -s https://se-ascl.onrender.com/api/health
+curl -sI https://singcl.vercel.app/ | head -1</code></pre>
+              </div>
+              <p class="tenue" style="margin:0">La primera petición puede tardar hasta 75 s si Render despertó del plan gratuito.</p>
+            </div>
+            <div class="tarjeta">
+              <h4>Qué significa «en línea»</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">●</span><span>El servicio responde y el modelo está cargado.</span></li>
+                <li><span class="ic">●</span><span>La web sirve el bundle de producción y encuentra la API.</span></li>
+                <li><span class="ic a">●</span><span>No implica que la calidad del modelo sea perfecta: la brecha <em>cross-subject</em> sigue declarada.</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="seccion" id="r-evolucion" data-titulo="Evolución Hito 1 → Hito 2 → Hito 3">
+          <h2><span class="chip">03</span> Evolución Hito 1 → Hito 2 → Hito 3</h2>
+          <p class="entradilla">La trazabilidad no es un adorno: el Hito 3 se evalúa por lo que cambió y por qué. Esta es la versión corta; el detalle vive en el documento final.</p>
+
+          <div class="linea-tiempo">
+            <div class="hito-t"><span class="fecha">20-09-2026 · Hito 1</span><b>Propuesta y prototipo</b><span>SPA Angular, MediaPipe en el navegador, FastAPI para inferencia y PostgreSQL para historial. Promesa unidireccional LSCh → texto y voz.</span></div>
+            <div class="hito-t"><span class="fecha">23-11-2026 · Hito 2</span><b>Motor de producción</b><span>Modelo v3 (Conv1D + BiLSTM, 89 clases), API REST/WS, CRUD completo, Argon2id + PyJWT, blindaje OWASP, 270 tests y despliegue Supabase + Render.</span></div>
+            <div class="hito-t"><span class="fecha">27-11-2026 · Hito 3</span><b>Producto conectado y documentado</b><span>Interfaz Angular contra el servicio real, historial persistente, estados y errores, accesibilidad, manual de uso/instalación, documento final y video de 2 minutos.</span></div>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>Corrección de trazabilidad pendiente.</b> El documento del Hito 2 declara «conexión del Frontend Angular» como pendiente. La web ya está conectada al backend; el documento final del Hito 3 debe registrar ese cambio con fecha, motivo y evidencia, no dejar la frase antigua.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="r-entrega" data-titulo="Qué se entrega y cuándo">
+          <h2><span class="chip">04</span> Qué se entrega y cuándo</h2>
+          <p class="entradilla">El cierre es el <strong>viernes 27 de noviembre de 2026 a las 23:59</strong>. La revisión del producto y la proyección de videos ocurren entre el 30 de noviembre y el 4 de diciembre. Después de esa semana no se recibe ninguna corrección.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Entregable</th><th>Formato y ubicación</th><th>Condición mínima</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>Producto funcional</td><td>Rama principal del repositorio</td><td>Flujo principal completo, levantable o publicado</td><td><span class="pill ok">publicado</span></td></tr>
+                <tr><td>Documentación final</td><td>PDF en <code>docs/</code></td><td>Estructura completa, diagramas al día, bitácora y limitaciones</td><td><span class="pill bad">pendiente</span></td></tr>
+                <tr><td>Manual de uso e instalación</td><td>Archivo en <code>docs/</code> + resumen en README</td><td>Requisitos, pasos, datos de prueba y fallas frecuentes</td><td><span class="pill ok">este archivo</span></td></tr>
+                <tr><td>Video promocional</td><td>Enlace visible en README</td><td>Máximo 2:00, producto real funcionando</td><td><span class="pill bad">pendiente</span></td></tr>
+                <tr><td>Anexo de IA</td><td>Dentro de la documentación final</td><td>Herramienta, parte del trabajo y verificación</td><td><span class="pill warn">borrador H2</span></td></tr>
+                <tr><td>Análisis de datos personales</td><td>Dentro de la documentación final</td><td>Qué datos, finalidad y medidas aplicadas</td><td><span class="pill warn">borrador H2</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-3">
+            <div class="tarjeta"><span class="etiqueta">Puntaje</span><span class="dato peq">50 + 50</span><small>Producto y repositorio + documentación y video</small></div>
+            <div class="tarjeta"><span class="etiqueta">Criterio de mayor peso</span><span class="dato peq">A1 · 18 pts</span><small>Recorrido completo de punta a punta</small></div>
+            <div class="tarjeta"><span class="etiqueta">Estándar real</span><span class="dato peq">10 min</span><small>El docente recorre el flujo solo, sin ayuda del equipo</small></div>
+          </div>
+        </section>
+
+        <section class="seccion" id="r-riesgos" data-titulo="Riesgos que restan puntos">
+          <h2><span class="chip">05</span> Riesgos que restan puntos</h2>
+          <p class="entradilla">Cinco hallazgos concretos de la revisión del repositorio. Cada uno tiene una acción asociada en el <a href="#entrega" data-ir="entrega">Centro de entrega</a>.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <span class="pill bad">B1 · B3</span>
+              <h4 style="margin-top:.5rem">La documentación no está en <code>docs/</code></h4>
+              <p class="chico">El PDF del Hito 2 y el documento final no están versionados en el repositorio. La pauta exige el PDF en <code>docs/</code>; un archivo que solo existe en un computador no cuenta.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="pill bad">B2</span>
+              <h4 style="margin-top:.5rem">ADR-001 describe otro sistema</h4>
+              <p class="chico"><code>docs/architecture/ADR-001</code> propone TFLite y Hand/Face Landmarker en el dispositivo. El sistema real usa MediaPipe Holistic en el navegador e inferencia Keras en el servidor. Un diagrama desactualizado induce a error.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="pill bad">B5</span>
+              <h4 style="margin-top:.5rem">La política de datos contradice el backend</h4>
+              <p class="chico"><code>docs/ethics-data/policy.md</code> dice que el historial es local por defecto; el backend lo persiste en PostgreSQL cuando el usuario lo activa. Hay que corregirlo antes del anexo de datos personales.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="pill warn">A5</span>
+              <h4 style="margin-top:.5rem">Ruido de legado en la raíz</h4>
+              <p class="chico"><code>packages/</code>, <code>apps/</code>, <code>ml/</code>, <code>turbo.json</code> y un CI con Node 20 y comandos viejos conviven con el producto actual. No rompen la demo, pero ensucian la revisión del repositorio.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="pill warn">A4 · B3</span>
+              <h4 style="margin-top:.5rem">Dominios desalineados</h4>
+              <p class="chico">La web real es <code>singcl.vercel.app</code>, pero el README y algunos ejemplos hablan de <code>senacl.vercel.app</code>. <code>ALLOWED_ORIGINS</code> debe contener el dominio exacto o el WebSocket falla con <code>1008</code>.</p>
+            </div>
+            <div class="tarjeta">
+              <span class="pill warn">B4</span>
+              <h4 style="margin-top:.5rem">El video no existe todavía</h4>
+              <p class="chico">Sin video de 2 minutos se pierden 14 puntos directos. No sirve grabar láminas: la pauta evalúa el producto real funcionando en los primeros 120 segundos.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= 02 · TÉCNICO ================= -->
+      <section class="panel" id="panel-tecnico" role="tabpanel" aria-labelledby="tab-tecnico" data-panel="tecnico" hidden="">
+
+        <section class="seccion" id="t-arquitectura" data-titulo="Arquitectura en capas">
+          <h2><span class="chip">01</span> Arquitectura en capas</h2>
+          <p class="entradilla">Monolito modular: un solo servicio desplegable, cuatro capas con fronteras verificadas por pruebas. Se eligió frente a microservicios porque hay un modelo, un equipo de tres personas y una latencia objetivo de milisegundos; repartir el sistema en servicios habría agregado red y operación sin beneficio medible.</p>
+
+          <figure class="diagrama">
+            <svg viewBox="0 0 900 350" role="img" aria-labelledby="arq-titulo arq-desc">
+              <title id="arq-titulo">Arquitectura de SeñaCL</title>
+              <desc id="arq-desc">El navegador extrae landmarks con MediaPipe y envía vectores por WebSocket o REST a la API FastAPI en Render, que infiere con el modelo v3 y persiste en PostgreSQL en Supabase.</desc>
+              <defs>
+                <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#174a78"></path></marker>
+              </defs>
+              <rect x="10" y="20" width="240" height="290" rx="14" fill="#eef6f1" stroke="#2f6b4f" stroke-width="1.5"></rect>
+              <text x="130" y="45" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#1d4d38">NAVEGADOR</text>
+              <text x="130" y="62" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#47705d">Angular 22 · Vercel</text>
+              <g font-family="system-ui,sans-serif" font-size="11" fill="#14212b">
+                <rect x="30" y="80" width="200" height="46" rx="8" fill="#fff" stroke="#b9cbc0"></rect><text x="130" y="99" text-anchor="middle" font-weight="600">Cámara + MediaPipe</text><text x="130" y="115" text-anchor="middle" font-size="10" fill="#51616e">Holistic · 1629 landmarks</text>
+                <rect x="30" y="142" width="200" height="46" rx="8" fill="#fff" stroke="#b9cbc0"></rect><text x="130" y="161" text-anchor="middle" font-weight="600">Vector por cuadro</text><text x="130" y="177" text-anchor="middle" font-size="10" fill="#51616e">Float32 · 6.516 bytes</text>
+                <rect x="30" y="204" width="200" height="46" rx="8" fill="#fff" stroke="#b9cbc0"></rect><text x="130" y="223" text-anchor="middle" font-weight="600">Interfaz y estados</text><text x="130" y="239" text-anchor="middle" font-size="10" fill="#51616e">texto · voz · historial</text>
+                <rect x="30" y="262" width="200" height="30" rx="8" fill="#fdf3e2" stroke="#d9b98f"></rect><text x="130" y="282" text-anchor="middle" font-size="10" fill="#7a5a2e">El video nunca sale del equipo</text>
+              </g>
+
+              <rect x="310" y="20" width="300" height="290" rx="14" fill="#eaf2f9" stroke="#174a78" stroke-width="1.5"></rect>
+              <text x="460" y="45" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#123f6b">API FASTAPI</text>
+              <text x="460" y="62" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#3d6788">Render · Python 3.11</text>
+              <g font-family="system-ui,sans-serif" font-size="11" fill="#14212b">
+                <rect x="330" y="80" width="260" height="38" rx="8" fill="#fff" stroke="#9fbacc"></rect><text x="460" y="104" text-anchor="middle" font-weight="600">routes/ · schemas/</text>
+                <rect x="330" y="128" width="260" height="38" rx="8" fill="#fff" stroke="#9fbacc"></rect><text x="460" y="152" text-anchor="middle" font-weight="600">services/ · ml/</text>
+                <rect x="330" y="176" width="260" height="38" rx="8" fill="#fff" stroke="#9fbacc"></rect><text x="460" y="200" text-anchor="middle" font-weight="600">db/repositories.py</text>
+                <rect x="330" y="224" width="260" height="38" rx="8" fill="#fff" stroke="#9fbacc"></rect><text x="460" y="248" text-anchor="middle" font-weight="600">core/ · seguridad y config</text>
+                <rect x="330" y="272" width="260" height="26" rx="8" fill="#e8f3ed" stroke="#2f6b4f"></rect><text x="460" y="289" text-anchor="middle" font-size="10" fill="#1d4d38">Modelo v3 cargado una vez en lifespan</text>
+              </g>
+
+              <rect x="660" y="20" width="230" height="290" rx="14" fill="#f7efe4" stroke="#b08d5e" stroke-width="1.5"></rect>
+              <text x="775" y="45" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#6d4f27">POSTGRESQL</text>
+              <text x="775" y="62" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#8a6a3d">Supabase · pooler IPv4</text>
+              <g font-family="system-ui,sans-serif" font-size="11" fill="#14212b">
+                <rect x="680" y="88" width="190" height="62" rx="8" fill="#fff" stroke="#d9b98f"></rect><text x="775" y="109" text-anchor="middle" font-weight="600">users</text><text x="775" y="126" text-anchor="middle" font-size="10" fill="#51616e">cuenta · email · hash</text><text x="775" y="140" text-anchor="middle" font-size="9" fill="#71808c">sin datos biométricos</text>
+                <rect x="680" y="164" width="190" height="62" rx="8" fill="#fff" stroke="#d9b98f"></rect><text x="775" y="185" text-anchor="middle" font-weight="600">history</text><text x="775" y="202" text-anchor="middle" font-size="10" fill="#51616e">texto · etiqueta · confianza</text><text x="775" y="216" text-anchor="middle" font-size="9" fill="#71808c">ON DELETE CASCADE</text>
+                <rect x="680" y="240" width="190" height="44" rx="8" fill="#fdf3e2" stroke="#d9b98f"></rect><text x="775" y="258" text-anchor="middle" font-size="10" fill="#7a5a2e">RLS activo · anon sin permisos</text><text x="775" y="273" text-anchor="middle" font-size="9" fill="#8a6a3d">el backend entra como postgres</text>
+              </g>
+
+              <line x1="252" y1="110" x2="326" y2="99" stroke="#174a78" stroke-width="1.6" marker-end="url(#flecha)"></line>
+              <text x="289" y="96" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#174a78">WSS / HTTPS</text>
+              <line x1="612" y1="195" x2="672" y2="195" stroke="#174a78" stroke-width="1.6" marker-end="url(#flecha)"></line>
+              <text x="642" y="186" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#174a78">asyncpg</text>
+            </svg>
+            <figcaption>Figura 1 · Arquitectura desplegada: navegador, API y base de datos. El video no cruza ninguna frontera.</figcaption>
+          </figure>
+
+          <h3>Qué hace cada capa</h3>
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Capa</th><th>Módulos</th><th>Responsabilidad</th><th>Regla que la protege</th></tr></thead>
+              <tbody>
+                <tr><td>Transporte</td><td><code>app/routes/</code>, <code>app/schemas/</code></td><td>Validar entrada, llamar servicios o repositorios, traducir a HTTP</td><td>Ninguna consulta SQL en rutas; test AST</td></tr>
+                <tr><td>Negocio</td><td><code>app/services/</code>, <code>app/ml/</code></td><td>Segmentación, inferencia, reglas de persistencia</td><td>Sin acceso a HTTP ni a sesión de base</td></tr>
+                <tr><td>Datos</td><td><code>app/db/repositories.py</code>, <code>models.py</code>, <code>session.py</code></td><td>Todas las consultas de <code>users</code> e <code>history</code></td><td>Parámetros enlazados; transacción en <code>get_db()</code></td></tr>
+                <tr><td>Transversal</td><td><code>app/core/</code></td><td>Configuración, JWT, hash, rate limit, errores, logs</td><td>Secretos solo por entorno; sin eco de payloads</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Flujo de una traducción en vivo</h3>
+          <div class="pasos">
+            <div class="paso"><div><b>El navegador enciende la cámara</b><span>MediaPipe Holistic extrae pose (99), rostro (1404) y manos (63 + 63) por cuadro.</span></div></div>
+            <div class="paso"><div><b>Normaliza sin espejar</b><span>Aplica <code>y × (alto/ancho)</code> solo en <code>y</code>; los bloques ausentes van en <code>0.0</code>. El espejo es solo CSS.</span></div></div>
+            <div class="paso"><div><b>Envía 6.516 bytes por cuadro</b><span>WebSocket binario <code>Float32Array</code>. El servidor segmenta: 3 cuadros con mano para empezar, 10 sin manos para cortar.</span></div></div>
+            <div class="paso"><div><b>Remuestrea a 30 cuadros</b><span><code>linspace(0, N−1, 30).round()</code> si <code>N ≥ 30</code>; relleno de ceros si <code>N &lt; 30</code>. Luego calcula 576 features.</span></div></div>
+            <div class="paso"><div><b>Infere fuera del event loop</b><span><code>model(x, training=False)</code> dentro de <code>asyncio.to_thread</code>, con semáforo compartido y <code>@tf.function</code>.</span></div></div>
+            <div class="paso"><div><b>Responde y persiste si corresponde</b><span>Etiqueta, texto, confianza y modo vuelven al cliente. Solo con JWT, <code>save_history</code> y <code>aceptada</code> se guarda en <code>history</code>.</span></div></div>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-stack" data-titulo="Stack y costos asumidos">
+          <h2><span class="chip">02</span> Stack y costos asumidos</h2>
+          <p class="entradilla">Cada tecnología tiene una razón y un costo. La tabla evita el «se usa porque está de moda»: la justificación es la que se defiende en la revisión.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Capa</th><th>Tecnología</th><th>Por qué</th><th>Costo asumido</th></tr></thead>
+              <tbody>
+                <tr><td>Frontend</td><td>Angular 22 + TypeScript</td><td>SPA con rutas, guards, DI y pruebas; ya estaba comprometida en el Hito 1</td><td>Peso del framework y 30 MB de MediaPipe autoalojado</td></tr>
+                <tr><td>Landmarks</td><td>MediaPipe Holistic 0.5.1675471629</td><td>Reproduce el grafo exacto con que se entrenó el modelo</td><td>Paquete sin desarrollo activo; versión fijada</td></tr>
+                <tr><td>API</td><td>FastAPI 0.115 + Pydantic 2</td><td>Async, validación declarativa y OpenAPI</td><td>Un proceso: rate limit y contadores en memoria</td></tr>
+                <tr><td>Modelo</td><td>TensorFlow 2.16 / Keras 3</td><td>Artefacto <code>.keras</code> ya entrenado; CPU suficiente</td><td>~410 MiB de RAM en reposo</td></tr>
+                <tr><td>Base</td><td>PostgreSQL 14+ / SQLAlchemy async</td><td>Relacional, transaccional, con cascada y constraints</td><td>Pooler y SSL que hay que configurar bien</td></tr>
+                <tr><td>Auth</td><td>Argon2id + PyJWT HS256</td><td>Recomendación OWASP y RFC 9106; sin CVE de python-jose</td><td>64 MiB por hash: se limita la concurrencia</td></tr>
+                <tr><td>Nube</td><td>Vercel + Render + Supabase</td><td>HTTPS/WSS gratis y despliegue reproducible</td><td>Plan free con cold start y 512 MB</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>El plan gratuito es para la demo, no para uso real.</b> Render Free tiene 512 MB y suspende por inactividad; el arranque puede tardar cerca de un minuto. Para uso sostenido se recomienda Standard (2 GB) y un rate limit compartido.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-modelo" data-titulo="Modelo LSCh v3">
+          <h2><span class="chip">03</span> Modelo LSCh v3</h2>
+          <p class="entradilla">Un clasificador <strong>Conv1D + BiLSTM</strong> sobre 30 cuadros de landmarks. No ve píxeles: ve geometría normalizada. Esa decisión es la que permite privacidad y latencia baja.</p>
+
+          <div class="grid grid-4">
+            <div class="tarjeta"><span class="etiqueta">Entrada cruda</span><span class="dato peq">30 × 1.629</span><small>float32 por muestra</small></div>
+            <div class="tarjeta"><span class="etiqueta">Features</span><span class="dato peq">30 × 576</span><small>228 coords + 228 velocidades + 120 forma local</small></div>
+            <div class="tarjeta"><span class="etiqueta">Salida</span><span class="dato peq">89</span><small>probabilidades softmax</small></div>
+            <div class="tarjeta"><span class="etiqueta">Validación</span><span class="dato peq">92,5 %</span><small>Top-1 · 98,0 % Top-5</small></div>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Artefacto</th><th>Ruta oficial</th><th>Rol</th></tr></thead>
+              <tbody>
+                <tr><td>Modelo</td><td><code>conversor/modelos/mejor_modelo_lsch.keras</code></td><td>Pesos y arquitectura; copia 1:1 en <code>backend/models/</code></td></tr>
+                <tr><td>Etiquetas</td><td><code>etiquetas_lsch.json</code></td><td>Índice 0..88 → clase y texto</td></tr>
+                <tr><td>Contrato</td><td><code>config_features.json</code></td><td>Se valida al arrancar; si no coincide, el servidor no inicia</td></tr>
+                <tr><td>Preprocesador</td><td><code>features_lsch.py</code></td><td><code>(30, 1629) → (30, 576)</code>; solo NumPy</td></tr>
+                <tr><td>SVM estático</td><td><code>models/static_svm.joblib</code></td><td>Opcional; hoy no está desplegado (<code>no_disponible</code>)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Las cinco reglas que no se pueden romper</h3>
+          <ol>
+            <li><strong>Nunca espejar los landmarks.</strong> El espejo es solo visual (<code>scaleX(-1)</code> en CSS). Invertir los datos intercambia manos y desploma la precisión.</li>
+            <li><strong>La <code>y</code> es isotrópica.</strong> Cada punto se guarda como <code>[x, y × (alto/ancho), z]</code>; nunca se multiplica <code>x</code> ni <code>z</code>.</li>
+            <li><strong>Orden exacto del vector.</strong> Pose 99 + rostro 1404 + mano izquierda 63 + mano derecha 63 = <strong>1.629</strong>; bloques ausentes en <code>0.0</code> exacto.</li>
+            <li><strong>Remuestreo a 30 cuadros.</strong> <code>linspace</code> con redondeo si <code>N ≥ 30</code>; relleno de ceros al final si <code>N &lt; 30</code>.</li>
+            <li><strong>Encuadre.</strong> Cabeza y ambos hombros visibles: la normalización usa la distancia entre hombros.</li>
+          </ol>
+
+          <details>
+            <summary>Ver el contrato exacto del vector de 1.629 floats</summary>
+            <div class="detalle-cuerpo">
+              <div class="tabla-envoltura">
+                <table class="tabla-mini">
+                  <thead><tr><th>Rango</th><th>Bloque</th><th>Puntos</th><th>Valores</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>0..98</code></td><td>Pose</td><td>33</td><td>99</td></tr>
+                    <tr><td><code>99..1502</code></td><td>Rostro (<code>refine_face_landmarks=false</code>)</td><td>468</td><td>1.404</td></tr>
+                    <tr><td><code>1503..1565</code></td><td>Mano izquierda</td><td>21</td><td>63</td></tr>
+                    <tr><td><code>1566..1628</code></td><td>Mano derecha</td><td>21</td><td>63</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="tenue" style="margin:0">La paridad con <code>conversor/features_lsch.py</code> se verifica al cuarto decimal (|Δ| &lt; 1e-4) y por SHA-256 de los bytes de los artefactos copiados.</p>
+            </div>
+          </details>
+
+          <div class="aviso">
+            <p><b>Limitación declarada.</b> La validación intacta da 92,50 % Top-1, pero la prueba <em>cross-subject</em> sobre webcam no vista baja a <strong>63,33 % Top-1 / 82,22 % Top-5</strong>. Es la brecha real del producto y debe aparecer en el documento final y en el video, no esconderse.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-rest" data-titulo="API REST">
+          <h2><span class="chip">04</span> API REST</h2>
+          <p class="entradilla">Contrato versionado en el comportamiento, no en la URL. Errores con <code>detail</code> legible y <code>request_id</code> para correlacionar; <code>/docs</code> solo existe con <code>DEBUG=true</code>.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Qué hace</th></tr></thead>
+              <tbody>
+                <tr><td><span class="pill azul mono">POST</span></td><td><code>/api/auth/register</code></td><td>—</td><td>Registro · 3/min por IP · <code>409</code> genérico si existe</td></tr>
+                <tr><td><span class="pill azul mono">POST</span></td><td><code>/api/auth/login</code></td><td>—</td><td>Login JSON → JWT · 5/min por IP</td></tr>
+                <tr><td><span class="pill azul mono">POST</span></td><td><code>/api/recognize</code></td><td>Opcional</td><td>Inferencia de una secuencia <code>(N, 1629)</code> · 30/min</td></tr>
+                <tr><td><span class="pill mono">GET</span></td><td><code>/api/users/me</code></td><td>🔒</td><td>Perfil propio; nunca devuelve <code>password_hash</code></td></tr>
+                <tr><td><span class="pill mono">PATCH</span></td><td><code>/api/users/me</code></td><td>🔒</td><td>Email y/o contraseña; exige <code>current_password</code></td></tr>
+                <tr><td><span class="pill mono">DELETE</span></td><td><code>/api/users/me</code></td><td>🔒</td><td>Borra cuenta e historial en cascada · <code>204</code></td></tr>
+                <tr><td><span class="pill mono">GET</span></td><td><code>/api/history/me</code></td><td>🔒</td><td>Historial propio (ruta recomendada)</td></tr>
+                <tr><td><span class="pill mono">GET</span></td><td><code>/api/history/{user_id}</code></td><td>🔒</td><td>Historial propio; <code>403</code> si el id no es del token</td></tr>
+                <tr><td><span class="pill mono">PATCH</span></td><td><code>/api/history/{entry_id}</code></td><td>🔒</td><td>Corrige <code>spanish_text</code>; etiqueta y confianza inmutables</td></tr>
+                <tr><td><span class="pill mono">DELETE</span></td><td><code>/api/history/{entry_id}</code></td><td>🔒</td><td>Borra entrada propia; <code>404</code> si es ajena</td></tr>
+                <tr><td><span class="pill mono">GET</span></td><td><code>/api/health</code></td><td>—</td><td>Estado de PostgreSQL y del modelo; <code>503</code> si está degradado</td></tr>
+                <tr><td><span class="pill mono">GET</span></td><td><code>/api/clases</code></td><td>—</td><td>Glosario de las 89 señas</td></tr>
+                <tr><td><span class="pill mono">WS</span></td><td><code>/ws/recognize</code></td><td>Opcional</td><td>Reconocimiento en streaming, cuadro a cuadro</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-2">
+            <div>
+              <h4>Ejemplo de respuesta de <code>/api/recognize</code></h4>
+              <div class="bloque-codigo">
+                <div class="barra-codigo"><span>json</span><button class="copiar" type="button">Copiar</button></div>
+                <pre><code>{
+  "aceptada": true,
+  "prediccion": {
+    "clase_raw": "donde_salida.I",
+    "texto": "¿donde salida?",
+    "es_pregunta": true,
+    "confianza": 0.8742
+  },
+  "top_k": [ /* 3 alternativas */ ],
+  "frames_recibidos": 38,
+  "latencia_ms": 6.1,
+  "predicted_label": "donde_salida.I",
+  "spanish_text": "¿donde salida?",
+  "confidence": 0.8742,
+  "mode": "dynamic",
+  "timestamp": "2026-11-22T12:00:00Z"
+}</code></pre>
+              </div>
+            </div>
+            <div>
+              <h4>Reglas del cuerpo</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">●</span><span><strong>12 a 600 cuadros</strong>, cada uno con exactamente 1.629 números finitos.</span></li>
+                <li><span class="ic">●</span><span>JSON o binario <code>application/octet-stream</code> (<code>N × 6.516</code> bytes, little-endian).</span></li>
+                <li><span class="ic">●</span><span>Máximo 5 MB por petición: <code>413</code> por <code>Content-Length</code> o conteo <em>chunked</em>.</span></li>
+                <li><span class="ic">●</span><span>Binario recomendado para secuencias largas; <code>top_k</code>, <code>mode</code> y <code>save_history</code> van por query.</span></li>
+                <li><span class="ic">●</span><span>Guardar exige JWT válido, <code>save_history=true</code> y <code>aceptada=true</code>.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <h4>Códigos que el cliente debe manejar</h4>
+          <div class="fila">
+            <span class="pill ok">200 · lectura ok</span>
+            <span class="pill ok">201 · registro</span>
+            <span class="pill ok">204 · borrado</span>
+            <span class="pill warn">401 · credenciales o token</span>
+            <span class="pill warn">403 · recurso ajeno</span>
+            <span class="pill warn">404 · no existe o es ajeno</span>
+            <span class="pill bad">409 · conflicto genérico</span>
+            <span class="pill bad">413 · cuerpo grande</span>
+            <span class="pill bad">422 · validación</span>
+            <span class="pill bad">429 · rate limit</span>
+            <span class="pill bad">503 · modelo o base caídos</span>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-ws" data-titulo="WebSocket en tiempo real">
+          <h2><span class="chip">05</span> WebSocket en tiempo real</h2>
+          <p class="entradilla">El traductor usa <code>wss://…/ws/recognize</code>. El JWT viaja en un mensaje <code>auth</code>, nunca en la URL. El servidor mantiene un buffer por conexión y lo descarta al cerrar.</p>
+
+          <div class="grid grid-2">
+            <div>
+              <h4>Cliente → servidor</h4>
+              <div class="tabla-envoltura">
+                <table class="tabla-mini">
+                  <thead><tr><th>Mensaje</th><th>Efecto</th></tr></thead>
+                  <tbody>
+                    <tr><td>Binario <code>Float32Array</code> (6.516 B)</td><td>Agrega un cuadro · recomendado</td></tr>
+                    <tr><td><code>{"type":"frame","data":[…1629]}</code></td><td>Agrega un cuadro en JSON · pruebas</td></tr>
+                    <tr><td><code>{"type":"config",…}</code></td><td><code>modo</code>, <code>umbral</code>, <code>top_k</code>, <code>save_history</code></td></tr>
+                    <tr><td><code>{"type":"auth","token":"…"}</code></td><td>Habilita guardado con JWT</td></tr>
+                    <tr><td><code>manual_start</code> / <code>manual_stop</code></td><td>Grabación manual · tope 600 cuadros</td></tr>
+                    <tr><td><code>{"type":"reset"}</code></td><td>Vacía el buffer</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h4>Servidor → cliente</h4>
+              <div class="tabla-envoltura">
+                <table class="tabla-mini">
+                  <thead><tr><th>Mensaje</th><th>Contenido</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>estado</code></td><td>Fase de segmentación y configuración</td></tr>
+                    <tr><td><code>prediccion</code></td><td>Contrato REST + <code>origen</code> y <code>aviso</code></td></tr>
+                    <tr><td><code>descartado</code></td><td>Segmento de ruido, con motivo</td></tr>
+                    <tr><td><code>error</code></td><td>Error controlado; la conexión puede seguir</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <h4>Segmentación automática</h4>
+          <p>Empieza a grabar tras <strong>3 cuadros seguidos con alguna mano</strong>, corta tras <strong>10 cuadros sin manos</strong> o al llegar a <strong>90</strong>, y descarta segmentos de menos de <strong>12 cuadros</strong>. En modo manual, el usuario controla el inicio y el fin.</p>
+
+          <h4>Límites y cierres</h4>
+          <div class="tabla-envoltura">
+            <table class="tabla-mini">
+              <thead><tr><th>Situación</th><th>Límite</th><th>Cierre</th></tr></thead>
+              <tbody>
+                <tr><td><code>Origin</code> fuera de la lista blanca (anti-CSWSH)</td><td>Antes del handshake</td><td><code>1008</code></td></tr>
+                <tr><td>Conexiones simultáneas por IP</td><td>5</td><td><code>1008</code></td></tr>
+                <tr><td>Mensaje demasiado grande</td><td>48 KB</td><td><code>1009</code></td></tr>
+                <tr><td>Ráfaga de mensajes</td><td>35/s; 5 ventanas seguidas</td><td><code>1008</code></td></tr>
+                <tr><td>Inactividad</td><td>60 s</td><td><code>1001</code></td></tr>
+                <tr><td>Cuadro con largo distinto de 1.629</td><td>—</td><td><code>error</code> controlado, sigue</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Reconexión.</b> Ante <code>1001</code> (inactividad o redespliegue) el cliente reintenta con espera creciente; ante <code>1008</code> no insiste, porque el origen o el cupo no se arreglan reintentando.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-datos" data-titulo="Datos y persistencia">
+          <h2><span class="chip">06</span> Datos y persistencia</h2>
+          <p class="entradilla">Dos tablas, cero biometría. El historial guarda la traducción, no el video ni los landmarks. La relación en cascada es lo que hace real el derecho de supresión.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Tabla</th><th>Campo</th><th>Tipo / regla</th><th>Nota</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="5"><code>users</code></td><td><code>id</code></td><td>SERIAL PK</td><td>—</td></tr>
+                <tr><td><code>username</code></td><td>VARCHAR(50) UNIQUE</td><td>3–50, <code>^[a-zA-Z0-9_.-]+$</code></td></tr>
+                <tr><td><code>email</code></td><td>VARCHAR(100) UNIQUE</td><td>Normalizado a minúsculas</td></tr>
+                <tr><td><code>password_hash</code></td><td>VARCHAR(255)</td><td>Argon2id, nunca la contraseña</td></tr>
+                <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td><code>NOW()</code></td></tr>
+                <tr><td rowspan="7"><code>history</code></td><td><code>id</code></td><td>SERIAL PK</td><td>—</td></tr>
+                <tr><td><code>user_id</code></td><td>INTEGER FK</td><td><code>ON DELETE CASCADE</code></td></tr>
+                <tr><td><code>predicted_label</code></td><td>VARCHAR(50)</td><td>Inmutable</td></tr>
+                <tr><td><code>spanish_text</code></td><td>TEXT</td><td>1–500, sin caracteres de control</td></tr>
+                <tr><td><code>confidence</code></td><td>FLOAT</td><td><code>CHECK 0..1</code></td></tr>
+                <tr><td><code>mode</code></td><td>VARCHAR(20)</td><td><code>static</code> o <code>dynamic</code></td></tr>
+                <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>Índice descendente</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Qué nunca se guarda</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic x">×</span><span>Video, imágenes o audio.</span></li>
+                <li><span class="ic x">×</span><span>Landmarks, frames o puntos del cuerpo.</span></li>
+                <li><span class="ic x">×</span><span>Contraseñas en claro, tokens o payloads en logs.</span></li>
+              </ul>
+            </div>
+            <div class="tarjeta">
+              <h4>Qué sí se guarda</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">✓</span><span>Usuario, email y hash Argon2id.</span></li>
+                <li><span class="ic">✓</span><span>Solo si el usuario lo activa: texto, etiqueta, confianza, modo y fecha.</span></li>
+                <li><span class="ic">✓</span><span>IP en memoria por 60 s para el rate limit; nunca en la base.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="aviso ok">
+            <p><b>Supabase con RLS.</b> <code>db/supabase_rls.sql</code> activa Row Level Security en <code>users</code> e <code>history</code> sin políticas y revoca permisos a <code>anon</code> y <code>authenticated</code>. El backend entra como <code>postgres</code>, que omite RLS: la autorización real sigue en los repositorios. Es defensa en profundidad, no la única barrera.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-seguridad" data-titulo="Seguridad y OWASP">
+          <h2><span class="chip">07</span> Seguridad y OWASP</h2>
+          <p class="entradilla">El backend se blindó contra OWASP API Security Top 10 (2023). Lo importante no es la lista, sino que cada control tiene una prueba que falla si se rompe.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Riesgo</th><th>Control implementado</th><th>Dónde se verifica</th></tr></thead>
+              <tbody>
+                <tr><td>API1 · BOLA</td><td>Propiedad por <code>user_id</code> del token; <code>404</code> si la entrada es ajena</td><td><code>test_security.py</code>, <code>test_crud.py</code></td></tr>
+                <tr><td>API2 · Autenticación</td><td>Argon2id, política de contraseñas, anti-enumeración, JWT con <code>sub/exp/iat/jti</code></td><td><code>test_auth_history.py</code></td></tr>
+                <tr><td>API3 · Campos editables</td><td><code>extra="forbid"</code>; solo <code>spanish_text</code>, <code>email</code> y <code>new_password</code></td><td><code>test_crud.py</code></td></tr>
+                <tr><td>API4 · Consumo</td><td>1.629 finitos, 12–600 cuadros, 5 MB, rate limit, semáforos</td><td><code>test_security.py</code></td></tr>
+                <tr><td>API5 · BFLA</td><td>Rutas de perfil sin id manipulable; candado por dependencia</td><td><code>test_security.py</code></td></tr>
+                <tr><td>API8 · Configuración</td><td>CORS cerrado, cabeceras, <code>/docs</code> off, HSTS, sin <code>*</code></td><td><code>test_config_prod.py</code>, <code>test_cloud.py</code></td></tr>
+                <tr><td>CSWSH</td><td><code>Origin</code> validado antes del handshake</td><td><code>test_websocket.py</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-2">
+            <div>
+              <h4>Cabeceras en cada respuesta</h4>
+              <div class="bloque-codigo">
+                <div class="barra-codigo"><span>http</span><button class="copiar" type="button">Copiar</button></div>
+                <pre><code>X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer
+Permissions-Policy: camera=(self),
+  microphone=(), geolocation=()
+Content-Security-Policy: default-src 'none'
+X-Request-ID: &lt;id&gt;
+Cache-Control: no-store  (auth/history/users)</code></pre>
+              </div>
+            </div>
+            <div>
+              <h4>Límites por IP y por minuto</h4>
+              <div class="tabla-envoltura">
+                <table class="tabla-mini">
+                  <thead><tr><th>Ruta</th><th>Límite</th></tr></thead>
+                  <tbody>
+                    <tr><td>Login</td><td>5</td></tr>
+                    <tr><td>Registro</td><td>3</td></tr>
+                    <tr><td>Perfil (<code>PATCH</code>)</td><td>5</td></tr>
+                    <tr><td>Reconocimiento</td><td>30</td></tr>
+                    <tr><td>WebSocket por IP</td><td>5 conexiones</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <details>
+            <summary>Limitaciones de seguridad declaradas</summary>
+            <div class="detalle-cuerpo">
+              <ul>
+                <li>Rate limit y contadores WS <strong>en memoria y por proceso</strong>: con varios workers hacen falta Redis o límites en el proxy.</li>
+                <li><code>TRUST_PROXY_HOPS</code> debe coincidir con la infraestructura real; un valor mayor permite falsificar la IP.</li>
+                <li>El rate limit es por IP exacta: IPv6 puede rotar dentro de su /64.</li>
+                <li><code>DB_SSL=true</code> sin <code>DB_SSL_ROOT_CERT</code> cifra pero no autentica al servidor.</li>
+                <li>No hay revocación de JWT ni refresh tokens; cambiar la contraseña no invalida tokens vigentes.</li>
+                <li><code>DELETE /api/users/me</code> no vuelve a pedir contraseña: el cliente debe confirmar con el usuario.</li>
+                <li>El backend no puede verificar que el cliente aplicó la <code>y</code> isotrópica ni que no espejó los landmarks.</li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <section class="seccion" id="t-frontend" data-titulo="Frontend Angular">
+          <h2><span class="chip">08</span> Frontend Angular</h2>
+          <p class="entradilla">SPA con rutas perezosas, cámara propia y WebSocket. Las vistas no saben de HTTP ni de base de datos: piden a servicios. Un script de arquitectura lo comprueba.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Ruta</th><th>Acceso</th><th>Contenido</th></tr></thead>
+              <tbody>
+                <tr><td><code>/</code></td><td>Pública</td><td>Traductor en vivo</td></tr>
+                <tr><td><code>/glosario</code></td><td>Pública</td><td>Las 89 señas, buscador y filtros</td></tr>
+                <tr><td><code>/informacion</code></td><td>Pública</td><td>Guía rápida, privacidad y contacto</td></tr>
+                <tr><td><code>/login</code>, <code>/registro</code></td><td>Solo sin sesión</td><td>Cuenta</td></tr>
+                <tr><td><code>/historial</code></td><td>🔒</td><td>Traducciones guardadas: corregir, escuchar, eliminar</td></tr>
+                <tr><td><code>/perfil</code></td><td>🔒</td><td>Datos, privacidad Ley 21.719 y eliminación de cuenta</td></tr>
+                <tr><td><code>/**</code></td><td>Pública</td><td>Página no encontrada</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-3">
+            <div class="tarjeta"><span class="etiqueta">Landmarks</span><h4>MediaPipe Holistic</h4><p class="chico">Versión exacta <code>0.5.1675471629</code>, <code>selfieMode: false</code>, autoalojado. <code>tasks-vision</code> no reproduce el contrato de 1.629 floats.</p></div>
+            <div class="tarjeta"><span class="etiqueta">Sesión</span><h4>JWT en <code>sessionStorage</code></h4><p class="chico">Sobrevive a F5, no queda en equipos compartidos y se borra al cerrar la pestaña. Token de 60 minutos.</p></div>
+            <div class="tarjeta"><span class="etiqueta">Preferencias</span><h4><code>localStorage</code> acotado</h4><p class="chico">Solo <code>senacl.preferencias</code>: texto, contraste, tema, movimiento, subrayado y foco. Nunca credenciales ni landmarks.</p></div>
+          </div>
+
+          <h4>Reglas de capas que verifica <code>npm run verificar</code></h4>
+          <ul class="lista-limpia">
+            <li><span class="ic">✓</span><span><code>features/</code>, <code>layout/</code> y <code>shared/</code> no importan <code>HttpClient</code>, <code>ApiService</code>, WebSocket, MediaPipe ni <code>getUserMedia</code>.</span></li>
+            <li><span class="ic">✓</span><span>Solo <code>core/auth/session.service.ts</code> toca almacenamiento.</span></li>
+            <li><span class="ic">✓</span><span>Sin <code>innerHTML</code>, sin JWT en URL, sin rutas REST con barra final y sin grabación de video.</span></li>
+            <li><span class="ic">✓</span><span>El vector de 1.629 se arma solo en <code>services/landmarks.ts</code>.</span></li>
+          </ul>
+
+          <div class="aviso info">
+            <p><b>Accesibilidad.</b> El panel <kbd>Alt</kbd>+<kbd>A</kbd> permite texto grande, contraste, tema oscuro, reducción de movimiento, subrayado de enlaces y foco reforzado. La cámara tiene estados visibles y nunca se depende solo del color ni del audio.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-qa" data-titulo="Calidad y pruebas">
+          <h2><span class="chip">09</span> Calidad y pruebas</h2>
+          <p class="entradilla">270 pruebas en <code>signia_test</code>, mutación 20/20, <code>ruff</code> y <code>bandit</code> en cero. La suite corre solo contra una base local terminada en <code>_test</code>: nunca contra Supabase.</p>
+
+          <div class="grid grid-4">
+            <div class="tarjeta"><span class="dato">270/270</span><small>pytest · 102 s</small></div>
+            <div class="tarjeta"><span class="dato">20/20</span><small>mutaciones detectadas</small></div>
+            <div class="tarjeta"><span class="dato">0</span><small>hallazgos High/Med</small></div>
+            <div class="tarjeta"><span class="dato">1e-4</span><small>paridad ML exigida</small></div>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Archivo</th><th>Qué cubre</th></tr></thead>
+              <tbody>
+                <tr><td><code>test_ml_parity.py</code></td><td>Paridad JSON/binario, N=15/30/45, artefactos 1:1, remuestreo, formato <code>.I</code></td></tr>
+                <tr><td><code>test_security.py</code></td><td>JWT manipulado, anti-BOLA/IDOR, NaN/Inf, 413, 415, 429, cabeceras, CORS, capas por AST, handler 500, WS</td></tr>
+                <tr><td><code>test_crud.py</code></td><td>CRUD de historial y perfil, errores, inmutabilidad, cascada, repositorios</td></tr>
+                <tr><td><code>test_auth_history.py</code></td><td>Health, Argon2id, historial y reglas de persistencia de <code>/api/recognize</code></td></tr>
+                <tr><td><code>test_websocket.py</code></td><td>Máquina de estados: auto, ruido, manual, aislamiento y persistencia</td></tr>
+                <tr><td><code>test_config_prod.py</code></td><td><code>Settings</code>, arranque con <code>DEBUG=false</code>, seed idempotente</td></tr>
+                <tr><td><code>test_cloud.py</code></td><td>URL/SSL/pooler, IP tras proxy, CORS y Origin de Vercel, RLS, <code>render.yaml</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Comandos de calidad</h4>
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>desde la raíz</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>pip install -r backend/requirements-dev.txt
+ruff check backend/app backend/tests
+bandit -r backend/app -ll
+pytest backend/tests -v
+
+cd frontend
+npm test          # reglas de capas + unitarias
+npm run typecheck
+npm run build</code></pre>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>Brecha real en A5 / integración continua.</b> <code>.github/workflows/ci.yml</code> usa Node 20 y comandos de la raíz que ya no existen. O se actualiza para ejecutar <code>ruff</code>, <code>pytest</code> y <code>npm test</code>, o se elimina para no simular una integración que no corre.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="t-limites" data-titulo="Limitaciones declaradas">
+          <h2><span class="chip">10</span> Limitaciones declaradas</h2>
+          <p class="entradilla">Declarar límites no resta: resta esconderlos y que el evaluador los descubra solo. Estas son las limitaciones que el documento final debe repetir.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta"><h4>Precisión</h4><p class="chico">63,33 % Top-1 en webcam no vista (<em>cross-subject</em>). Depende del encuadre, la luz y de que el cliente no espeje ni deforme los landmarks.</p></div>
+            <div class="tarjeta"><h4>Escala</h4><p class="chico">Rate limit y contadores WS en memoria, un solo proceso. Para varios workers hace falta un almacén compartido.</p></div>
+            <div class="tarjeta"><h4>Sesión</h4><p class="chico">Sin refresh tokens ni revocación de JWT. Cambiar la contraseña no invalida los tokens ya emitidos.</p></div>
+            <div class="tarjeta"><h4>Infraestructura</h4><p class="chico">Render Free: 512 MB, cold start de hasta 75 s y suspensión por inactividad.</p></div>
+            <div class="tarjeta"><h4>Alcance lingüístico</h4><p class="chico">89 señas aisladas, traducción unidireccional LSCh → español. No es traducción continua ni interpretación certificada.</p></div>
+            <div class="tarjeta"><h4>Operación</h4><p class="chico">Sin contenedores ni CI funcional. El despliegue es reproducible por blueprint y documentación, no por un solo comando.</p></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= 03 · USO ================= -->
+      <section class="panel" id="panel-uso" role="tabpanel" aria-labelledby="tab-uso" data-panel="uso" hidden="">
+
+        <section class="seccion" id="u-antes" data-titulo="Antes de empezar">
+          <h2><span class="chip">01</span> Antes de empezar</h2>
+          <p class="entradilla">El producto se usa desde el navegador, sin instalar nada. La cámara es la única entrada y el video nunca sale del equipo: al servidor solo viajan vectores de puntos del cuerpo.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Necesitas</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">✓</span><span>Chrome o Edge actualizado, con WebGL 2.</span></li>
+                <li><span class="ic">✓</span><span>Cámara web y permiso del navegador.</span></li>
+                <li><span class="ic">✓</span><span>Conexión a internet: la inferencia corre en el servidor.</span></li>
+                <li><span class="ic">✓</span><span>Cabeza y ambos hombros dentro del cuadro.</span></li>
+                <li><span class="ic">✓</span><span>Luz frontal; evita contraluz y fondos con muchas manos.</span></li>
+              </ul>
+            </div>
+            <div class="tarjeta">
+              <h4>No necesitas</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic x">×</span><span>Crear cuenta para traducir.</span></li>
+                <li><span class="ic x">×</span><span>Instalar MediaPipe ni Python.</span></li>
+                <li><span class="ic x">×</span><span>Micrófono: el audio es solo de salida.</span></li>
+                <li><span class="ic x">×</span><span>Dar permiso de ubicación.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Direcciones del producto.</b> Web: <a href="https://singcl.vercel.app/" target="_blank" rel="noopener">https://singcl.vercel.app</a> · API: <a href="https://se-ascl.onrender.com/api/health" target="_blank" rel="noopener">https://se-ascl.onrender.com/api/health</a>. Si Render estaba dormido, la primera carga puede tardar hasta 75 segundos.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="u-recorrido" data-titulo="Recorrido del evaluador en 10 minutos">
+          <h2><span class="chip">02</span> Recorrido del evaluador en 10 minutos</h2>
+          <p class="entradilla">Este es el flujo que el docente debe poder completar <strong>solo, sin ayuda del equipo</strong>. Si un paso exige explicación oral, todavía no está terminado.</p>
+
+          <div class="pasos">
+            <div class="paso"><div><b>Abrir la web y comprobar el estado</b><span>La barra debe decir «Servidor disponible». Si dice «Conectando…», espera; si dice «Servidor sin conexión», revisa la sección de fallas.</span></div></div>
+            <div class="paso"><div><b>Pulsar «Iniciar cámara» y aceptar el permiso</b><span>El video aparece espejado solo de forma visual. El estado cambia a «Cargando modelo» y luego a «Activo».</span></div></div>
+            <div class="paso"><div><b>Elegir modo Automático y hacer una seña</b><span>Levanta las manos, ejecuta la seña y bájalas. La traducción aparece en el panel derecho con su confianza.</span></div></div>
+            <div class="paso"><div><b>Probar el modo Manual</b><span>Cambia a Manual, pulsa «Grabar seña», ejecuta y detén. El servidor devuelve la predicción del segmento.</span></div></div>
+            <div class="paso"><div><b>Usar una alternativa si la principal falla</b><span>La lista <code>top_k</code> permite elegir otra interpretación. Copiar, limpiar y leer la frase con voz.</span></div></div>
+            <div class="paso"><div><b>Iniciar sesión y guardar en el historial</b><span>Activa «Guardar en mi historial», repite una seña y abre <code>/historial</code>. La entrada debe seguir ahí tras recargar.</span></div></div>
+            <div class="paso"><div><b>Corregir y eliminar una entrada</b><span>Edita el texto, guarda, escucha la corrección y elimina otra entrada confirmando la acción.</span></div></div>
+            <div class="paso"><div><b>Revisar perfil, privacidad y accesibilidad</b><span>Cambia el tema o el tamaño de texto con <kbd>Alt</kbd>+<kbd>A</kbd>; revisa qué datos se guardan y cuáles nunca se guardan.</span></div></div>
+            <div class="paso"><div><b>Abrir el glosario</b><span>Busca una seña, filtra por pregunta/afirmación y gira una tarjeta para ver su referencia.</span></div></div>
+            <div class="paso"><div><b>Cerrar la cámara</b><span>Al salir del traductor la cámara se apaga. El navegador debe dejar de mostrar el indicador de grabación.</span></div></div>
+          </div>
+
+          <div class="aviso ok">
+            <p><b>Flujo mínimo que no se puede fallar.</b> Cámara → WebSocket → predicción → texto → guardar → recargar → historial. Ese ciclo es el corazón del RDA 3 y el criterio A1 (18 puntos).</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="u-modos" data-titulo="Modos, estados y mensajes">
+          <h2><span class="chip">03</span> Modos, estados y mensajes</h2>
+          <p class="entradilla">La interfaz debe explicar qué está pasando en todo momento. Una pantalla en blanco o un error sin salida es un error de diseño, no un caso borde.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Modo</th><th>Cómo funciona</th><th>Cuándo usarlo</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Automático</strong></td><td>Empieza tras 3 cuadros con mano, corta tras 10 sin manos o a los 90, y descarta menos de 12.</td><td>Demostración fluida y uso natural.</td></tr>
+                <tr><td><strong>Manual</strong></td><td>El usuario pulsa «Grabar seña» y «Detener». Tope de 600 cuadros.</td><td>Señas cortas, control preciso o ruido ambiental.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Estado</th><th>Qué ve el usuario</th><th>Qué debe hacer</th></tr></thead>
+              <tbody>
+                <tr><td>Inactivo</td><td>«Traduce señas a texto y voz» + botón de cámara</td><td>Iniciar cámara</td></tr>
+                <tr><td>Cargando</td><td>Indicador de carga con el paso actual</td><td>Esperar; no recargar</td></tr>
+                <tr><td>Activo</td><td>Video, insignias de manos y estado del WebSocket</td><td>Hacer una seña</td></tr>
+                <tr><td>Sin detección</td><td>Aviso «Muestra cabeza y hombros»</td><td>Reencuadrar</td></tr>
+                <tr><td>Confianza baja</td><td>Predicción con aviso y alternativas</td><td>Repetir la seña o elegir alternativa</td></tr>
+                <tr><td>Lista vacía</td><td>Mensaje explicativo en historial</td><td>Guardar una traducción</td></tr>
+                <tr><td>Error de cámara</td><td>Motivo + botón «Probar conexión»</td><td>Revisar permisos o HTTPS</td></tr>
+                <tr><td>WebSocket caído</td><td>Mensaje de cierre + botón «Reconectar»</td><td>Reconectar; si es <code>1008</code>, avisar al equipo</td></tr>
+                <tr><td>Servidor dormido</td><td>«Conectando…» hasta 75 s</td><td>Esperar la primera petición</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>Errores traducidos, no códigos crudos.</b> El usuario no debe leer «422» ni «CORS»: debe leer «Revisa el correo», «Tu sesión expiró» o «El servidor no está disponible». El mapeo vive en <code>error-mapper.service.ts</code>.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="u-glosario" data-titulo="Glosario de 89 señas">
+          <h2><span class="chip">04</span> Glosario de 89 señas</h2>
+          <p class="entradilla">El glosario es la referencia del vocabulario que el modelo reconoce. No es un diccionario completo de LSCh: son exactamente las clases entrenadas.</p>
+
+          <div class="grid grid-3">
+            <div class="tarjeta"><span class="etiqueta">Buscador</span><h4>Por texto</h4><p class="chico">Filtra por la etiqueta o el texto en español. Útil para confirmar si una seña está soportada antes de culpar al modelo.</p></div>
+            <div class="tarjeta"><span class="etiqueta">Filtros</span><h4>Preguntas y afirmaciones</h4><p class="chico">Separa las señas que terminan en pregunta (¿…?) de las afirmaciones. El formato <code>.I</code> del modelo marca la entonación.</p></div>
+            <div class="tarjeta"><span class="etiqueta">Tarjeta</span><h4>Girar para ver referencia</h4><p class="chico">El botón «Ver cómo se hace» gira la tarjeta. Hoy la referencia es una ilustración local; el endpoint dedicado está deshabilitado.</p></div>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Estado actual.</b> <code>referenciasHabilitadas: false</code> en ambos entornos. <code>obtenerReferenciaSena()</code> entrega <code>public/referencias/mano.svg</code> hasta que el backend exponga <code>GET /api/referencias/{clase}</code>. Es una limitación declarada, no un error de la demo.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="u-historial" data-titulo="Historial de traducciones">
+          <h2><span class="chip">05</span> Historial de traducciones</h2>
+          <p class="entradilla">Solo las últimas 50 traducciones guardadas, solo del usuario autenticado. Guardar es opt-in: el interruptor parte apagado.</p>
+
+          <div class="grid grid-2">
+            <div>
+              <h4>Qué se puede hacer</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">✓</span><span>Corregir <code>spanish_text</code> (1–500 caracteres, sin controles).</span></li>
+                <li><span class="ic">✓</span><span>Escuchar la frase con la voz del navegador.</span></li>
+                <li><span class="ic">✓</span><span>Eliminar una entrada con confirmación irreversible.</span></li>
+                <li><span class="ic">✓</span><span>Actualizar la lista sin recargar la página.</span></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Qué no se puede cambiar</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic x">×</span><span><code>predicted_label</code>: es la traza del modelo.</span></li>
+                <li><span class="ic x">×</span><span><code>confidence</code> y <code>mode</code>: también inmutables.</span></li>
+                <li><span class="ic x">×</span><span>El historial de otro usuario: responde <code>404</code>, no <code>403</code>, para no filtrar existencia.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Ver el contrato técnico del historial</summary>
+            <div class="detalle-cuerpo">
+              <ul>
+                <li><code>GET /api/history/me</code> devuelve el historial propio, ordenado por fecha descendente.</li>
+                <li><code>PATCH /api/history/{entry_id}</code> acepta solo <code>{"spanish_text": "…"}</code>; cualquier otro campo responde <code>422</code>.</li>
+                <li><code>DELETE /api/history/{entry_id}</code> responde <code>204</code>; repetirlo responde <code>404</code>.</li>
+                <li>Al eliminar la cuenta, <code>ON DELETE CASCADE</code> borra todo el historial.</li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <section class="seccion" id="u-perfil" data-titulo="Perfil y privacidad">
+          <h2><span class="chip">06</span> Perfil y privacidad</h2>
+          <p class="entradilla">El perfil concentra los derechos de la Ley 21.719: acceso, rectificación y supresión. No hay que escribir a nadie ni pedir permiso.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Acción</th><th>Dónde</th><th>Qué exige</th><th>Efecto</th></tr></thead>
+              <tbody>
+                <tr><td>Ver mis datos</td><td><code>/perfil</code></td><td>Sesión</td><td>Usuario y correo; nunca el hash</td></tr>
+                <tr><td>Cambiar correo</td><td><code>/perfil</code></td><td>Contraseña actual</td><td><code>409</code> genérico si ya está en uso</td></tr>
+                <tr><td>Cambiar contraseña</td><td><code>/perfil</code></td><td>Contraseña actual + nueva válida</td><td>Los JWT vigentes siguen sirviendo (limitación)</td></tr>
+                <tr><td>Eliminar cuenta</td><td><code>/perfil</code></td><td>Confirmación explícita en el diálogo</td><td><code>204</code>, cascada y token invalidado</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Lo que guardamos</h4>
+              <p class="chico">Usuario, correo y contraseña cifrada de forma irreversible (Argon2id). Si activas el historial: texto, etiqueta, confianza, tipo y fecha.</p>
+            </div>
+            <div class="tarjeta">
+              <h4>Lo que nunca guardamos</h4>
+              <p class="chico">Video, imágenes, audio, landmarks ni puntos del cuerpo. La IP se usa en memoria 60 s para el rate limit y no se persiste.</p>
+            </div>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>La política de datos del repositorio está desactualizada.</b> <code>docs/ethics-data/policy.md</code> afirma que el historial es local por defecto, pero el sistema lo persiste en PostgreSQL cuando el usuario lo activa. Corregirlo antes de firmar el anexo B5.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="u-accesibilidad" data-titulo="Accesibilidad">
+          <h2><span class="chip">07</span> Accesibilidad</h2>
+          <p class="entradilla">El panel de accesibilidad se abre desde el encabezado o con <kbd>Alt</kbd>+<kbd>A</kbd>. Las preferencias se recuerdan en <code>localStorage</code>; no guardan datos personales.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Ajuste</th><th>Opciones</th><th>Para qué</th></tr></thead>
+              <tbody>
+                <tr><td>Tamaño de texto</td><td>Normal, grande, extra</td><td>Baja visión o pantallas lejanas</td></tr>
+                <tr><td>Contraste</td><td>Normal, alto</td><td>Luz ambiente o sensibilidad</td></tr>
+                <tr><td>Tema</td><td>Claro, oscuro</td><td>Fatiga visual</td></tr>
+                <tr><td>Movimiento</td><td>Normal, reducido</td><td>Vértigo o preferencia del sistema</td></tr>
+                <tr><td>Enlaces</td><td>Subrayado</td><td>Distinguirlos sin depender del color</td></tr>
+                <tr><td>Foco</td><td>Reforzado</td><td>Navegación por teclado</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <ul class="lista-limpia">
+            <li><span class="ic">✓</span><span>Toda la interfaz, excepto la cámara, se navega por teclado y lector de pantalla.</span></li>
+            <li><span class="ic">✓</span><span>Los estados usan color + texto o ícono; nunca solo color.</span></li>
+            <li><span class="ic">✓</span><span>Objetivos táctiles de al menos 44 × 44 px.</span></li>
+            <li><span class="ic">✓</span><span>La cámara tiene indicador visible y explicación de cuándo está activa.</span></li>
+            <li><span class="ic">✓</span><span>Se respeta <code>prefers-reduced-motion</code>.</span></li>
+          </ul>
+        </section>
+
+        <section class="seccion" id="u-faq" data-titulo="Preguntas frecuentes">
+          <h2><span class="chip">08</span> Preguntas frecuentes</h2>
+          <p class="entradilla">Respuestas cortas para la revisión. Si la respuesta es «depende», se dice qué depende.</p>
+
+          <details><summary>¿Se envía mi video al servidor?</summary><div class="detalle-cuerpo"><p>No. El navegador extrae 1.629 puntos por cuadro y envía solo esos números. El video, los cuadros y los landmarks no se persisten ni se registran.</p></div></details>
+          <details><summary>¿Necesito cuenta para traducir?</summary><div class="detalle-cuerpo"><p>No. La cuenta solo habilita guardar historial, corregirlo o eliminarlo. Sin sesión, la inferencia funciona igual.</p></div></details>
+          <details><summary>¿Por qué a veces no reconoce la seña?</summary><div class="detalle-cuerpo"><p>Porque el modelo tiene 89 clases y una brecha <em>cross-subject</em> real (63,33 % Top-1 en webcam no vista). Influyen la luz, el encuadre, la velocidad y que la seña esté en el vocabulario. Usa el glosario para confirmar que existe.</p></div></details>
+          <details><summary>¿Funciona en el celular?</summary><div class="detalle-cuerpo"><p>La web es responsiva y <code>getUserMedia</code> funciona en navegadores móviles modernos con HTTPS. El rendimiento depende del dispositivo; la inferencia ocurre en el servidor, pero MediaPipe corre en el cliente.</p></div></details>
+          <details><summary>¿Qué pasa si el servidor está dormido?</summary><div class="detalle-cuerpo"><p>Render Free suspende la instancia por inactividad. La primera petición puede tardar hasta 75 s. La app muestra «Conectando…» y espera; no es un error del producto.</p></div></details>
+          <details><summary>¿Puedo usar la app sin conexión?</summary><div class="detalle-cuerpo"><p>No para traducir: la inferencia vive en el servidor. Este manual sí funciona sin conexión porque es un archivo autocontenido.</p></div></details>
+          <details><summary>¿Es un intérprete certificado?</summary><div class="detalle-cuerpo"><p>No. Es una herramienta de apoyo con fines educativos. El resultado puede fallar y debe verificarse antes de usarlo en decisiones importantes.</p></div></details>
+        </section>
+
+        <section class="seccion" id="u-datos" data-titulo="Datos de prueba">
+          <h2><span class="chip">09</span> Datos de prueba</h2>
+          <p class="entradilla">Para la revisión conviene dejar una cuenta de demostración creada y con historial cargado. Nunca se usan datos personales reales ni se commitean credenciales.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Desarrollo local</h4>
+              <p class="chico">El seed crea <code>test_user</code> con contraseña <code>Test1234!</code>. Solo existe con <code>DEBUG=true</code> y en la base local. <strong>No cargar <code>seed.sql</code> en Supabase.</strong></p>
+            </div>
+            <div class="tarjeta">
+              <h4>Demostración publicada</h4>
+              <p class="chico">Crear una cuenta tipo <code>demo.docente</code> antes de la revisión, con 3–5 traducciones guardadas de ejemplo. La contraseña se dicta en voz alta o se entrega en un papel; no se escribe en el repositorio.</p>
+            </div>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>Datos ficticios, no reales.</b> La pauta y la Ley 21.719 exigen minimización. Usa correos <code>@example.com</code> y textos inventados. No grabes personas sin consentimiento para probar el modelo.</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= 04 · INSTALACIÓN ================= -->
+      <section class="panel" id="panel-instalacion" role="tabpanel" aria-labelledby="tab-instalacion" data-panel="instalacion" hidden="">
+
+        <section class="seccion" id="i-requisitos" data-titulo="Requisitos">
+          <h2><span class="chip">01</span> Requisitos</h2>
+          <p class="entradilla">La instalación completa son dos procesos: backend (Python + PostgreSQL + TensorFlow) y frontend (Node + Angular). La base puede ser local o Supabase.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Componente</th><th>Versión mínima</th><th>Nota</th></tr></thead>
+              <tbody>
+                <tr><td>Python</td><td>3.11</td><td>Probado con 3.11; TensorFlow 2.16.2 / Keras 3.15.1</td></tr>
+                <tr><td>PostgreSQL</td><td>14+</td><td>Local en WSL o Supabase con pooler IPv4</td></tr>
+                <tr><td>Node.js</td><td>24.15+</td><td>Angular CLI exige <code>^22.22.3 || ^24.15.0 || &gt;=26</code></td></tr>
+                <tr><td>npm</td><td>11</td><td>El proyecto usa <code>npm ci</code> en Vercel</td></tr>
+                <tr><td>Navegador</td><td>Chrome/Edge actual</td><td>WebGL 2 y <code>getUserMedia</code></td></tr>
+                <tr><td>Espacio</td><td>~1 GB</td><td>Modelo, dependencias y 30 MB de MediaPipe</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Sistema probado.</b> Windows 11 + WSL2 con PostgreSQL 14 y Python 3.11. En Linux nativo funciona igual; los comandos de activación cambian. Los tests requieren una base local llamada <code>signia_test</code>.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-local" data-titulo="Backend local">
+          <h2><span class="chip">02</span> Backend local</h2>
+          <p class="entradilla">Elige tu sistema. Ambos caminos terminan en el mismo <code>/api/health</code> con <code>database: ok</code> y <code>modelo: loaded</code>.</p>
+
+          <div class="os-tabs" data-tabgroup="so-backend">
+            <div class="os-botones" role="tablist" aria-label="Sistema operativo">
+              <button class="os-boton activo" role="tab" aria-selected="true" data-ostab="win">Windows · PowerShell</button>
+              <button class="os-boton" role="tab" aria-selected="false" data-ostab="linux">Linux · WSL</button>
+            </div>
+            <div class="os-panel activo" data-ospanel="win">
+              <div class="bloque-codigo">
+                <div class="barra-codigo"><span>powershell</span><button class="copiar" type="button">Copiar</button></div>
+                <pre><code>git clone https://github.com/ju4n0ff/se-ascl.git
+cd se-ascl\backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+copy ..\.env.example .env
+# Editar .env: DATABASE_URL, DATABASE_URL_SYNC y SECRET_KEY
+# Para la demo local: DEBUG=true (habilita /docs)</code></pre>
+              </div>
+            </div>
+            <div class="os-panel" data-ospanel="linux" hidden="">
+              <div class="bloque-codigo">
+                <div class="barra-codigo"><span>bash</span><button class="copiar" type="button">Copiar</button></div>
+                <pre><code>git clone https://github.com/ju4n0ff/se-ascl.git
+cd se-ascl/backend
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp ../.env.example .env
+# Editar .env: DATABASE_URL, DATABASE_URL_SYNC y SECRET_KEY
+# Para la demo local: DEBUG=true (habilita /docs)</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <h3>Crear la base y cargar datos</h3>
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>wsl / bash</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>sudo -u postgres createdb signia
+sudo -u postgres createdb signia_test
+psql -h 127.0.0.1 -U postgres -d signia -f db/schema.sql
+psql -h 127.0.0.1 -U postgres -d signia_test -f db/schema.sql
+python -m app.db.seed       # opcional, solo desarrollo</code></pre>
+          </div>
+          <p class="tenue"><code>schema.sql</code> empieza con <code>DROP TABLE</code>: úsalo solo al crear la base. En Supabase no cargues <code>seed.sql</code> porque crea una cuenta con contraseña conocida.</p>
+
+          <h3>Levantar el servidor</h3>
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>terminal</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 \
+  --ws-max-size 49152 --no-proxy-headers
+
+# Verificar
+curl -s http://127.0.0.1:8000/api/health</code></pre>
+          </div>
+
+          <div class="aviso info">
+            <p>Con <code>DEBUG=true</code>, la documentación interactiva queda en <a href="http://localhost:8000/docs" target="_blank" rel="noopener">http://localhost:8000/docs</a> con botón <strong>Authorize</strong> para pegar el JWT. Con <code>DEBUG=false</code> no existe <code>/docs</code> y el arranque falla si <code>SECRET_KEY</code> es débil.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-frontend" data-titulo="Frontend local">
+          <h2><span class="chip">03</span> Frontend local</h2>
+          <p class="entradilla">Abre <code>http://localhost:4200</code>, no <code>127.0.0.1:4200</code>: el backend permite el origen <code>localhost</code> por defecto.</p>
+
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>terminal</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>cd frontend
+npm install
+npm start
+# Abrir http://localhost:4200</code></pre>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table class="tabla-mini">
+              <thead><tr><th>Comando</th><th>Qué hace</th></tr></thead>
+              <tbody>
+                <tr><td><code>npm start</code></td><td>Servidor de desarrollo</td></tr>
+                <tr><td><code>npm test</code></td><td>Reglas de arquitectura + pruebas unitarias, una pasada</td></tr>
+                <tr><td><code>npm run typecheck</code></td><td>TypeScript y plantillas en modo estricto</td></tr>
+                <tr><td><code>npm run build</code></td><td>Build de producción en <code>dist/senacl-frontend/browser</code></td></tr>
+                <tr><td><code>npm run verificar</code></td><td>Solo reglas de capas</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>Node equivocado, error confuso.</b> Si Angular CLI se queja de la versión, usa <code>npx -y node@24.15.0 node_modules/@angular/cli/bin/ng.js test --watch=false</code> sin cambiar el Node del sistema. No uses Node 20.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-verificar" data-titulo="Verificar la instalación">
+          <h2><span class="chip">04</span> Verificar la instalación</h2>
+          <p class="entradilla">No declares terminada una instalación porque «abrió». Verifica los cuatro puntos y recién después prueba el flujo completo.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>#</th><th>Comprobación</th><th>Resultado esperado</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td><code>GET /api/health</code></td><td><code>200</code>, <code>database: ok</code>, <code>modelo.estado: loaded</code>, 89 clases</td></tr>
+                <tr><td>2</td><td>Abrir <code>/docs</code> con <code>DEBUG=true</code></td><td>Swagger carga y muestra los endpoints</td></tr>
+                <tr><td>3</td><td><code>npm start</code> y abrir <code>localhost:4200</code></td><td>Barra «Servidor disponible»</td></tr>
+                <tr><td>4</td><td>Iniciar cámara y hacer una seña</td><td>Predicción visible con confianza</td></tr>
+                <tr><td>5</td><td><code>pytest backend/tests -v</code></td><td>270 passed contra <code>signia_test</code></td></tr>
+                <tr><td>6</td><td><code>npm test</code></td><td>Reglas de capas y unitarias en verde</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Quality gates</h3>
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>desde la raíz</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>pip install -r backend/requirements-dev.txt
+ruff check backend/app backend/tests
+bandit -r backend/app -ll
+pytest backend/tests -v</code></pre>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-supabase" data-titulo="Supabase (base en la nube)">
+          <h2><span class="chip">05</span> Supabase (base en la nube)</h2>
+          <p class="entradilla">Supabase aporta PostgreSQL administrado. La conexión debe ir por el <strong>pooler IPv4</strong>: la conexión directa es IPv6 y no sirve desde Render.</p>
+
+          <div class="pasos">
+            <div class="paso"><div><b>Crear el proyecto</b><span>Elegir una región cercana a Render (por ejemplo, Oregon) y guardar la contraseña fuera del repositorio.</span></div></div>
+            <div class="paso"><div><b>Copiar la URL del pooler</b><span>Connect → Transaction pooler (6543) o Session pooler (5432). Codificar caracteres especiales (<code>@</code> = <code>%40</code>, <code>#</code> = <code>%23</code>).</span></div></div>
+            <div class="paso"><div><b>Crear tablas y activar RLS</b><span>Ejecutar <code>schema.sql</code> y después <code>supabase_rls.sql</code>, en ese orden. No cargar <code>seed.sql</code>.</span></div></div>
+            <div class="paso"><div><b>Verificar</b><span>La consulta final debe mostrar <code>rls = true</code> en <code>users</code> e <code>history</code>; el Security Advisor no debe reportar tablas sin RLS.</span></div></div>
+            <div class="paso"><div><b>Desactivar la Data API</b><span>Project Settings → Data API. El proyecto no la usa y reduce superficie de ataque.</span></div></div>
+          </div>
+
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>psql · una sola vez</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>psql "&lt;URL_DEL_POOLER&gt;" -1 -v ON_ERROR_STOP=1 -f backend/db/schema.sql
+psql "&lt;URL_DEL_POOLER&gt;" -1 -v ON_ERROR_STOP=1 -f backend/db/supabase_rls.sql</code></pre>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b><code>schema.sql</code> borra las tablas.</b> Ejecutarlo de nuevo elimina los datos <strong>y</strong> el RLS. En producción se ejecuta solo al crear el proyecto. La contraseña de la base y la <code>service_role</code> nunca van al repositorio.</p>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Estado de esta revisión.</b> El panel de Supabase no se auditó desde aquí porque el navegador del revisor no comparte la sesión. Lo anterior se verificó contra <code>schema.sql</code>, <code>supabase_rls.sql</code> y <code>test_cloud.py</code>, más el <code>database: ok</code> del health.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-render" data-titulo="Render (API)">
+          <h2><span class="chip">06</span> Render (API)</h2>
+          <p class="entradilla">El blueprint <code>render.yaml</code> describe el servicio. Los secretos se escriben en el panel, no en el archivo.</p>
+
+          <div class="pasos">
+            <div class="paso"><div><b>New → Blueprint</b><span>Elegir el repositorio y la rama. Render lee <code>render.yaml</code> de la raíz.</span></div></div>
+            <div class="paso"><div><b>Completar secretos</b><span><code>DATABASE_URL</code> (pooler), <code>SECRET_KEY</code> (<code>python -c "import secrets; print(secrets.token_urlsafe(64))"</code>) y <code>ALLOWED_ORIGINS</code>.</span></div></div>
+            <div class="paso"><div><b>Esperar el build</b><span>El modelo <code>.keras</code> (11 MB) está en Git normal, sin LFS: se clona sin pasos extra.</span></div></div>
+            <div class="paso"><div><b>Comprobar el health</b><span><code>https://&lt;servicio&gt;.onrender.com/api/health</code> → <code>200</code> y <code>database: ok</code>.</span></div></div>
+            <div class="paso"><div><b>Calibrar <code>TRUST_PROXY_HOPS</code></b><span>Un intento de login desde fuera y revisar el log: si resuelve a una IP interna, subir el número al real. Validar que 6 intentos terminen en <code>429</code>.</span></div></div>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>No quitar del <code>render.yaml</code>:</b> <code>--no-proxy-headers</code>, <code>WEB_CONCURRENCY=1</code> ni los límites de concurrencia. El modelo, el rate limiter y los contadores WS viven en memoria de un solo proceso.</p>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table class="tabla-mini">
+              <thead><tr><th>Situación</th><th>RAM del proceso</th><th>Conclusión</th></tr></thead>
+              <tbody>
+                <tr><td>Modelo cargado, en reposo</td><td>~410 MiB</td><td>Cabe en Free/Starter con poco margen</td></tr>
+                <tr><td>5 inferencias de 600 cuadros</td><td>~434 MiB pico</td><td>Aceptable para demo</td></tr>
+                <tr><td>10 logins, 1 hash</td><td>~472 MiB pico</td><td>Al límite de 512 MB</td></tr>
+                <tr><td>10 logins, 8 hashes</td><td>~924 MiB pico</td><td>No usar en Free</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-vercel" data-titulo="Vercel (frontend)">
+          <h2><span class="chip">07</span> Vercel (frontend)</h2>
+          <p class="entradilla">Vercel sirve el bundle Angular. No hay variables de entorno: la URL de la API vive en <code>environment.prod.ts</code>.</p>
+
+          <div class="pasos">
+            <div class="paso"><div><b>Importar el repositorio</b><span>Root Directory: <code>frontend</code>. El preset Angular, el comando de build y la salida ya están en <code>vercel.json</code>.</span></div></div>
+            <div class="paso"><div><b>Confirmar la URL de la API</b><span><code>apiUrl</code> y <code>wsUrl</code> deben apuntar al mismo host Render, con <code>https://</code> y <code>wss://</code>, sin barra final.</span></div></div>
+            <div class="paso"><div><b>Agregar el dominio a <code>ALLOWED_ORIGINS</code></b><span>Exacto, sin barra final ni ruta. La misma lista vale para CORS y para el <code>Origin</code> del WebSocket. Redesplegar Render.</span></div></div>
+            <div class="paso"><div><b>Verificar</b><span>Indicador «Servidor disponible», cámara activa y <code>/historial</code> sin <code>404</code> al recargar.</span></div></div>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>Dominio real vs documentado.</b> La web publicada es <code>singcl.vercel.app</code>; el README y algunos ejemplos dicen <code>senacl.vercel.app</code>. Si <code>ALLOWED_ORIGINS</code> no contiene el dominio exacto, el REST puede funcionar y el WebSocket fallar con <code>1008</code>.</p>
+          </div>
+
+          <div class="bloque-codigo">
+            <div class="barra-codigo"><span>vercel.json · extracto</span><button class="copiar" type="button">Copiar</button></div>
+            <pre><code>{
+  "framework": "angular",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/senacl-frontend/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-env" data-titulo="Variables de entorno">
+          <h2><span class="chip">08</span> Variables de entorno</h2>
+          <p class="entradilla">Copia <code>.env.example</code> a <code>backend/.env</code> y edita. Con <code>DEBUG=false</code> el arranque falla si el secreto es débil o si los orígenes no son HTTPS (salvo loopback).</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Variable</th><th>Para qué</th><th>Ejemplo / regla</th></tr></thead>
+              <tbody>
+                <tr><td><code>DATABASE_URL</code></td><td>Conexión asyncpg</td><td><code>postgresql+asyncpg://user:pass@host:5432/signia</code></td></tr>
+                <tr><td><code>DATABASE_URL_SYNC</code></td><td>Scripts y Alembic</td><td><code>postgresql+psycopg2://…</code></td></tr>
+                <tr><td><code>SECRET_KEY</code></td><td>Firma JWT</td><td>≥ 32 caracteres aleatorios</td></tr>
+                <tr><td><code>ALGORITHM</code></td><td>Algoritmo JWT</td><td><code>HS256</code></td></tr>
+                <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td>Vigencia del token</td><td><code>60</code></td></tr>
+                <tr><td><code>DEBUG</code></td><td><code>/docs</code>, HSTS, validaciones</td><td><code>false</code> en producción</td></tr>
+                <tr><td><code>ALLOWED_ORIGINS</code></td><td>CORS y <code>Origin</code> del WS</td><td>Lista separada por comas, sin <code>*</code></td></tr>
+                <tr><td><code>ALLOWED_ORIGIN_REGEX</code></td><td>Previews de Vercel</td><td>Patrón cerrado; vacío por defecto</td></tr>
+                <tr><td><code>DB_SSL</code>, <code>DB_USE_PGBOUNCER</code></td><td>SSL y pooler</td><td>Vacío = automático; <code>true</code> gana</td></tr>
+                <tr><td><code>DB_SSL_ROOT_CERT</code></td><td>Verificar CA</td><td>Ruta a la CA de Supabase</td></tr>
+                <tr><td><code>TRUST_PROXY_HOPS</code></td><td>IP real detrás del proxy</td><td>0–5; en Render calibrar</td></tr>
+                <tr><td><code>UMBRAL_CONFIANZA</code></td><td>Aceptación de predicción</td><td><code>0.55</code></td></tr>
+                <tr><td><code>MAX_CONCURRENT_INFERENCES</code></td><td>Semáforo de CPU</td><td><code>2</code> local, <code>1</code> en Free</td></tr>
+                <tr><td><code>MAX_CONCURRENT_HASHES</code></td><td>Semáforo Argon2id</td><td><code>2</code> local, <code>1</code> en Free</td></tr>
+                <tr><td><code>MAX_BODY_BYTES</code></td><td>Tope HTTP</td><td><code>5242880</code> (5 MB)</td></tr>
+                <tr><td><code>RATE_LIMIT_*</code></td><td>Límites por IP</td><td>5 / 3 / 5 / 30 por minuto</td></tr>
+                <tr><td><code>WS_*</code></td><td>Límites del WebSocket</td><td>48 KB · 5 conexiones · 35 msg/s · 60 s</td></tr>
+                <tr><td><code>DYNAMIC_MODEL_PATH</code></td><td>Modelo oficial</td><td><code>models/mejor_modelo_lsch.keras</code></td></tr>
+                <tr><td><code>LABELS_PATH</code>, <code>FEATURES_CONFIG_PATH</code></td><td>Etiquetas y contrato</td><td>Rutas relativas a <code>backend/</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>Nunca commitear <code>backend/.env</code>.</b> Si una credencial se filtra, hay que rotarla y limpiar el historial; no basta con borrar el archivo en un commit posterior.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="i-limpio" data-titulo="Prueba en un equipo limpio">
+          <h2><span class="chip">09</span> Prueba en un equipo limpio</h2>
+          <p class="entradilla">La pauta pide que otro equipo instale el proyecto siguiendo el archivo de instrucciones. Lo que se traba es lo que falta documentar. Esta lista se marca a mano y no cuenta para el puntaje.</p>
+
+          <div class="items">
+            <label class="check"><input type="checkbox" data-limpio="1"><span><b>Clonar en una carpeta nueva</b><small>Sin reutilizar <code>venv</code>, <code>node_modules</code> ni <code>.env</code> de otra máquina.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="2"><span><b>Instalar Python 3.11 y PostgreSQL 14+</b><small>Verificar versiones antes de ejecutar <code>pip install</code>.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="3"><span><b>Crear <code>signia</code> y <code>signia_test</code></b><small>El test aborta si la base no termina en <code>_test</code> o no es local.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="4"><span><b>Copiar <code>.env.example</code> y editarlo</b><small>Sin pedir el <code>.env</code> de un compañero.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="5"><span><b>Levantar <code>/api/health</code> en 200</b><small>Con modelo cargado y base ok.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="6"><span><b>Instalar y abrir el frontend en <code>localhost:4200</code></b><small>Con «Servidor disponible».</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="7"><span><b>Completar el flujo de 10 minutos</b><small>Cámara → predicción → guardar → recargar → historial.</small></span></label>
+            <label class="check"><input type="checkbox" data-limpio="8"><span><b>Anotar cada tropiezo</b><small>Agregarlo al manual y a la bitácora; no arreglarlo en silencio.</small></span></label>
+          </div>
+
+          <div class="aviso ok">
+            <p><b>Criterio de éxito.</b> Otra persona completa la instalación sin que el equipo toque el teclado. Si necesita preguntar, la respuesta debe estar en este manual.</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= 05 · ENTREGA ================= -->
+      <section class="panel" id="panel-entrega" role="tabpanel" aria-labelledby="tab-entrega" data-panel="entrega" hidden="">
+
+        <section class="seccion" id="e-centro" data-titulo="Cómo usar el centro de entrega">
+          <h2><span class="chip">01</span> Cómo usar el centro de entrega</h2>
+          <p class="entradilla">Marca lo que ya está hecho. El avance se guarda solo en este navegador y se pondera con el puntaje oficial de cada criterio. <strong>No es una nota</strong>: es cobertura de requisitos, para saber dónde se pierden puntos antes de la revisión.</p>
+
+          <div class="resumen-check">
+            <div class="anillo" aria-hidden="true">
+              <svg width="104" height="104" viewBox="0 0 104 104">
+                <circle cx="52" cy="52" r="44" fill="none" stroke="var(--superficie-3)" stroke-width="10"></circle>
+                <circle id="anillo-progreso" cx="52" cy="52" r="44" fill="none" stroke="var(--verde-2)" stroke-width="10" stroke-linecap="round" stroke-dasharray="276.46" stroke-dashoffset="276.46" style="transition:stroke-dashoffset .4s"></circle>
+              </svg>
+              <div class="centro"><b id="pct-global">0 %</b><small>requisitos</small></div>
+            </div>
+            <div class="txt">
+              <b><span id="pts-global">0</span> / 100 puntos cubiertos</b>
+              <p id="resumen-texto">0 de 55 requisitos marcados. El puntaje es cobertura ponderada, no la nota oficial.</p>
+              <div class="barras" id="barras-criterio"><div class="barra-linea"><span>A1</span><span class="tubo"><i id="bar-A1" style="width: 0%;"></i></span><span id="txt-A1">0/5 · 0p</span></div><div class="barra-linea"><span>A2</span><span class="tubo"><i id="bar-A2" style="width: 0%;"></i></span><span id="txt-A2">0/5 · 0p</span></div><div class="barra-linea"><span>A3</span><span class="tubo"><i id="bar-A3" style="width: 0%;"></i></span><span id="txt-A3">0/6 · 0p</span></div><div class="barra-linea"><span>A4</span><span class="tubo"><i id="bar-A4" style="width: 0%;"></i></span><span id="txt-A4">0/6 · 0p</span></div><div class="barra-linea"><span>A5</span><span class="tubo"><i id="bar-A5" style="width: 0%;"></i></span><span id="txt-A5">0/5 · 0p</span></div><div class="barra-linea"><span>B1</span><span class="tubo"><i id="bar-B1" style="width: 0%;"></i></span><span id="txt-B1">0/6 · 0p</span></div><div class="barra-linea"><span>B2</span><span class="tubo"><i id="bar-B2" style="width: 0%;"></i></span><span id="txt-B2">0/5 · 0p</span></div><div class="barra-linea"><span>B3</span><span class="tubo"><i id="bar-B3" style="width: 0%;"></i></span><span id="txt-B3">0/5 · 0p</span></div><div class="barra-linea"><span>B4</span><span class="tubo"><i id="bar-B4" style="width: 0%;"></i></span><span id="txt-B4">0/7 · 0p</span></div><div class="barra-linea"><span>B5</span><span class="tubo"><i id="bar-B5" style="width: 0%;"></i></span><span id="txt-B5">0/5 · 0p</span></div></div>
+              <div class="acciones-check">
+                <button class="boton" type="button" id="copiar-resumen">Copiar resumen</button>
+                <button class="boton sec" type="button" id="reiniciar-check">Reiniciar checklist</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Cómo se calcula.</b> Cada criterio vale su peso oficial. Si un criterio tiene 5 requisitos y marcas 3, aporta el 60 % de su peso. Los 100 puntos solo se alcanzan con todos los requisitos marcados; la nota real la asigna el docente con la rúbrica de cuatro niveles.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-checklist" data-titulo="Checklist de los 10 criterios">
+          <h2><span class="chip">02</span> Checklist de los 10 criterios</h2>
+          <p class="entradilla">Los requisitos salen del mínimo funcional de la pauta y de lo que el producto realmente hace. Marca solo lo que puedes demostrar en vivo o mostrar en el repositorio.</p>
+
+          <div class="criterio" data-criterio="A1">
+            <div class="criterio-cab"><span class="cod">A1</span><h4>Recorrido completo de punta a punta</h4><span class="peso">18 pts</span><span class="avance"><b data-avance="A1">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="A1" value="A1-1"><span><b>El flujo cámara → WebSocket → predicción → texto funciona</b><small>Sin pasos ocultos ni consola abierta.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A1" value="A1-2"><span><b>Guardar en historial con sesión funciona</b><small>El interruptor está apagado por defecto y se activa explícitamente.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A1" value="A1-3"><span><b>El dato sobrevive a recargar la página</b><small><code>/historial</code> conserva la entrada después de F5.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A1" value="A1-4"><span><b>Corregir y eliminar una entrada funciona</b><small>Incluye confirmación antes de borrar.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A1" value="A1-5"><span><b>El flujo se repite sin ayuda del equipo</b><small>Otra persona lo completa con este manual.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="A2">
+            <div class="criterio-cab"><span class="cod">A2</span><h4>Integración efectiva por capas</h4><span class="peso">12 pts</span><span class="avance"><b data-avance="A2">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="A2" value="A2-1"><span><b>La interfaz no consulta la base de datos</b><small>Usa REST y WebSocket; no hay atajos.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A2" value="A2-2"><span><b>Las rutas no contienen SQL</b><small>El test AST de capas pasa.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A2" value="A2-3"><span><b>Las consultas viven en <code>repositories.py</code></b><small>Un solo lugar para <code>users</code> e <code>history</code>.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A2" value="A2-4"><span><b>El frontend respeta sus capas</b><small><code>npm run verificar</code> en verde.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A2" value="A2-5"><span><b>El modelo se carga una vez y no bloquea el event loop</b><small><code>lifespan</code>, <code>compile=False</code>, <code>to_thread</code> y semáforo.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="A3">
+            <div class="criterio-cab"><span class="cod">A3</span><h4>Validación, errores y estados</h4><span class="peso">8 pts</span><span class="avance"><b data-avance="A3">0/6</b>/6</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-1"><span><b>Validación en cliente</b><small>Correo, contraseña, texto y campos obligatorios.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-2"><span><b>Validación en servidor</b><small>Pydantic, <code>extra="forbid"</code> y límites de tamaño.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-3"><span><b>Mensajes en lenguaje de usuario</b><small>Sin «422», «CORS» ni trazas frente al usuario.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-4"><span><b>Estados de carga, vacío y error visibles</b><small>Ninguna pantalla queda en blanco.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-5"><span><b>401, 403, 404, 429 y 503 manejados</b><small>Cada uno con una acción posible.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A3" value="A3-6"><span><b>Cámara denegada y WS caído explicados</b><small>Con botón de reintento o instrucción clara.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="A4">
+            <div class="criterio-cab"><span class="cod">A4</span><h4>Ejecución reproducible o despliegue</h4><span class="peso">7 pts</span><span class="avance"><b data-avance="A4">0/6</b>/6</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-1"><span><b>README con requisitos y pasos</b><small>Sin «pregúntale a Javier».</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-2"><span><b><code>.env.example</code> sin secretos</b><small>Solo marcadores y comentarios.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-3"><span><b><code>/api/health</code> responde 200 en local</b><small>Base ok y modelo cargado.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-4"><span><b>El build de producción compila</b><small><code>npm run build</code> sin errores.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-5"><span><b>Web y API están publicadas y accesibles</b><small>HTTPS/WSS, dominio exacto en <code>ALLOWED_ORIGINS</code>.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A4" value="A4-6"><span><b>Probado en un equipo limpio</b><small>Con tropiezos anotados y corregidos.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="A5">
+            <div class="criterio-cab"><span class="cod">A5</span><h4>Repositorio e historial de trabajo</h4><span class="peso">5 pts</span><span class="avance"><b data-avance="A5">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="A5" value="A5-1"><span><b>Commits descriptivos y distribuidos</b><small>No una única carga final; hoy hay 71 commits.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A5" value="A5-2"><span><b>Ramas y merges ordenados</b><small>La rama del Hito 2 se integró con pull request.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A5" value="A5-3"><span><b>Sin <code>.env</code>, <code>venv</code>, <code>node_modules</code> ni <code>dist</code></b><small>Verificar con <code>git status</code> y <code>git ls-files</code>.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A5" value="A5-4"><span><b>Sin credenciales en el historial</b><small>Si hubo, rotar y limpiar; no basta borrar el archivo.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="A5" value="A5-5"><span><b>Raíz ordenada y legado identificado</b><small><code>packages/</code>, <code>apps/</code>, <code>ml/</code>, <code>turbo.json</code> y CI viejo.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="B1">
+            <div class="criterio-cab"><span class="cod">B1</span><h4>Documento final completo</h4><span class="peso">12 pts</span><span class="avance"><b data-avance="B1">0/6</b>/6</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-1"><span><b>PDF final versionado en <code>docs/</code></b><small>No solo en el computador de un integrante.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-2"><span><b>Estructura formal completa</b><small>Introducción, arquitectura, resultados, conclusiones y bibliografía.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-3"><span><b>Diagramas finales al día</b><small>Coinciden con el código y el despliegue real.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-4"><span><b>Bitácora de decisiones</b><small>Fecha, alternativas, motivo y qué salió mal.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-5"><span><b>Limitaciones declaradas</b><small>Precisión cross-subject, escala, sesión e infraestructura.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B1" value="B1-6"><span><b>Redactado en pasado y sobre lo construido</b><small>No en futuro ni como plan.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="B2">
+            <div class="criterio-cab"><span class="cod">B2</span><h4>Arquitectura final y evolución de decisiones</h4><span class="peso">12 pts</span><span class="avance"><b data-avance="B2">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="B2" value="B2-1"><span><b>La arquitectura documentada coincide con el código</b><small>Capas, servicios y despliegue real.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B2" value="B2-2"><span><b>ADR-001 corregido o reemplazado</b><small>Hoy describe TFLite on-device, que no es el sistema.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B2" value="B2-3"><span><b>Evolución H1 → H2 → H3 documentada</b><small>Incluye la conexión del frontend como cambio cerrado.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B2" value="B2-4"><span><b>Diagrama de despliegue actualizado</b><small>Vercel + Render + Supabase, con pooler y RLS.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B2" value="B2-5"><span><b>Cada decisión tiene alternativa y costo</b><small>No «se usó porque es moderno».</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="B3">
+            <div class="criterio-cab"><span class="cod">B3</span><h4>Manual de uso e instalación</h4><span class="peso">6 pts</span><span class="avance"><b data-avance="B3">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="B3" value="B3-1"><span><b>Manual de uso en <code>docs/</code></b><small>Con recorrido, estados y preguntas frecuentes.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B3" value="B3-2"><span><b>Manual de instalación en <code>docs/</code></b><small>Windows, Linux, local y nube.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B3" value="B3-3"><span><b>Requisitos y datos de prueba</b><small>Cuenta demo preparada, sin secretos en el repo.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B3" value="B3-4"><span><b>Tres fallas frecuentes con solución</b><small>Idealmente las que aparecieron en la prueba limpia.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B3" value="B3-5"><span><b>Resumen y enlace en el README</b><small>Para que el docente llegue en un clic.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="B4">
+            <div class="criterio-cab"><span class="cod">B4</span><h4>Video promocional de máximo 2 minutos</h4><span class="peso">14 pts</span><span class="avance"><b data-avance="B4">0/7</b>/7</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-1"><span><b>Duración ≤ 2:00</b><small>Al segundo 121 la evaluación se detiene.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-2"><span><b>Muestra el producto real funcionando</b><small>No láminas ni capturas con música.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-3"><span><b>20 s de problema</b><small>Quién sufre qué y por qué importa.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-4"><span><b>80 s de producto</b><small>Traducción, historial y persistencia en pantalla.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-5"><span><b>20 s de promesa y cierre</b><small>Qué queda y qué sigue.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-6"><span><b>Audio limpio y texto legible al proyectar</b><small>Sin música ni imágenes de terceros sin crédito.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B4" value="B4-7"><span><b>Enlace visible en el README</b><small>Sin pedir permiso para verlo.</small></span></label>
+            </div>
+          </div>
+
+          <div class="criterio" data-criterio="B5">
+            <div class="criterio-cab"><span class="cod">B5</span><h4>Uso de IA y datos personales</h4><span class="peso">6 pts</span><span class="avance"><b data-avance="B5">0/5</b>/5</span></div>
+            <div class="items">
+              <label class="check"><input type="checkbox" data-crit="B5" value="B5-1"><span><b>Anexo de IA con herramienta, parte y verificación</b><small>Qué se generó, qué se revisó y cómo se comprobó.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B5" value="B5-2"><span><b>Anexo de datos personales</b><small>Qué datos, finalidad, minimización y medidas.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B5" value="B5-3"><span><b>Política de ética actualizada</b><small>Hoy dice historial local; el backend persiste en PostgreSQL.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B5" value="B5-4"><span><b>Demos con datos ficticios</b><small>Sin personas reales ni correos personales.</small></span></label>
+              <label class="check"><input type="checkbox" data-crit="B5" value="B5-5"><span><b>Derechos Ley 21.719 verificados</b><small>Acceso, rectificación y supresión probados en vivo.</small></span></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-rubrica" data-titulo="Rúbrica de 100 puntos">
+          <h2><span class="chip">03</span> Rúbrica de 100 puntos</h2>
+          <p class="entradilla">Pesos oficiales del Hito 3. La columna «qué mira el evaluador» traduce el criterio a evidencia observable, no a impresiones.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Bloque</th><th>Código</th><th>Criterio</th><th>Pts</th><th>Qué mira el evaluador</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="5">A · Producto y repositorio</td><td>A1</td><td>Recorrido completo de punta a punta</td><td><strong>18</strong></td><td>Él mismo hace el flujo completo sin ayuda.</td></tr>
+                <tr><td>A2</td><td>Integración efectiva por capas</td><td>12</td><td>La UI habla con la API; la API con la base; sin atajos.</td></tr>
+                <tr><td>A3</td><td>Validación, errores y estados</td><td>8</td><td>Mensajes humanos, estados visibles, nada en blanco.</td></tr>
+                <tr><td>A4</td><td>Ejecución reproducible o despliegue</td><td>7</td><td>Se levanta siguiendo el README o está publicado.</td></tr>
+                <tr><td>A5</td><td>Repositorio e historial de trabajo</td><td>5</td><td>Commits distribuidos, sin secretos ni dependencias.</td></tr>
+                <tr><td rowspan="5">B · Documentación y video</td><td>B1</td><td>Documento final completo</td><td>12</td><td>PDF en <code>docs/</code>, en pasado, con limitaciones.</td></tr>
+                <tr><td>B2</td><td>Arquitectura final y evolución</td><td>12</td><td>Diagramas que coinciden con el código.</td></tr>
+                <tr><td>B3</td><td>Manual de uso e instalación</td><td>6</td><td>Otro equipo puede seguirlo.</td></tr>
+                <tr><td>B4</td><td>Video promocional ≤ 2 min</td><td>14</td><td>Producto real funcionando en los primeros 120 s.</td></tr>
+                <tr><td>B5</td><td>IA y datos personales</td><td>6</td><td>Anexos concretos y verificables.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso warn">
+            <p><b>Puertas de entrada.</b> Sin repositorio no hay Hito 3. Si el proyecto no está en GitHub en la fecha de cierre, o no se levanta ni está publicado, la nota se reemplaza por 1,0. La rúbrica no salva una entrega inexistente.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-pendientes" data-titulo="Pendientes priorizados">
+          <h2><span class="chip">04</span> Pendientes priorizados</h2>
+          <p class="entradilla">Ordenados por impacto sobre el puntaje y esfuerzo. Los primeros cuatro son los que más puntos recuperan por hora invertida.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>#</th><th>Tarea</th><th>Criterio</th><th>Impacto</th><th>Esfuerzo</th></tr></thead>
+              <tbody>
+                <tr><td>P01</td><td>Mover el PDF del Hito 2 a <code>docs/</code> y escribir el documento final del Hito 3</td><td>B1</td><td><span class="pill bad">alto · 12 pts</span></td><td>3–4 días</td></tr>
+                <tr><td>P02</td><td>Grabar el video de 2 minutos con el producto real</td><td>B4</td><td><span class="pill bad">alto · 14 pts</span></td><td>1 día</td></tr>
+                <tr><td>P03</td><td>Corregir ADR-001 y el diagrama de arquitectura</td><td>B2</td><td><span class="pill bad">alto · 12 pts</span></td><td>2–3 h</td></tr>
+                <tr><td>P04</td><td>Enlazar este manual en el README y verificar la instalación limpia</td><td>B3 · A4</td><td><span class="pill warn">medio · 13 pts</span></td><td>4–6 h</td></tr>
+                <tr><td>P05</td><td>Actualizar <code>docs/ethics-data/policy.md</code></td><td>B5</td><td><span class="pill warn">medio · 6 pts</span></td><td>1 h</td></tr>
+                <tr><td>P06</td><td>Actualizar o eliminar el CI obsoleto</td><td>A5</td><td><span class="pill warn">medio · 5 pts</span></td><td>2 h</td></tr>
+                <tr><td>P07</td><td>Alinear el dominio real (<code>singcl.vercel.app</code>) en README, env y orígenes</td><td>A4 · B3</td><td><span class="pill warn">medio</span></td><td>1 h</td></tr>
+                <tr><td>P08</td><td>Arreglar el enlace roto de <code>docs/archivo/README.md</code></td><td>B1</td><td><span class="pill azul">bajo</span></td><td>15 min</td></tr>
+                <tr><td>P09</td><td>Limpiar legado de la raíz sin romper el build</td><td>A5</td><td><span class="pill azul">bajo</span></td><td>2–3 h</td></tr>
+                <tr><td>P10</td><td>Agregar <code>LICENSE</code> y créditos de terceros</td><td>B1 · B4</td><td><span class="pill azul">bajo</span></td><td>30 min</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>No hacer al final.</b> Limpiar el repositorio el mismo día del cierre puede romper el build que ya funcionaba. Congela el producto el 25-11 y dedica el 26 y 27 a documentación, video y ensayo.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-bitacora" data-titulo="Bitácora de decisiones">
+          <h2><span class="chip">05</span> Bitácora de decisiones</h2>
+          <p class="entradilla">Cada decisión con su alternativa descartada y su costo. Esta tabla es el borrador para el documento final: complétala con fecha y referencia Git.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Decisión</th><th>Alternativa descartada</th><th>Motivo</th><th>Costo asumido</th></tr></thead>
+              <tbody>
+                <tr><td>Monolito modular</td><td>Microservicios</td><td>Un modelo, tres personas y latencia de milisegundos</td><td>Escala vertical; rate limit en memoria</td></tr>
+                <tr><td>FastAPI + Pydantic</td><td>Flask o Django</td><td>Async, validación declarativa y OpenAPI</td><td>Ecosistema más joven</td></tr>
+                <tr><td>Angular 22</td><td>React o Vue</td><td>Comprometido en el Hito 1; guards, DI y tipado</td><td>Peso y curva de aprendizaje</td></tr>
+                <tr><td>MediaPipe Holistic en el navegador</td><td>Inferencia de video en el servidor</td><td>Privacidad y menor CPU por usuario</td><td>Paquete sin desarrollo activo; versión fijada</td></tr>
+                <tr><td>Modelo v3 Conv1D + BiLSTM</td><td>Solo manos o SVM</td><td>Las señas relativas al cuerpo necesitan pose y rostro</td><td>1.629 floats y 30 cuadros por muestra</td></tr>
+                <tr><td>Inferencia en servidor</td><td>On-device / TFLite</td><td>No exponer el artefacto y mantener paridad exacta</td><td>Depende de red y del plan de Render</td></tr>
+                <tr><td>Argon2id + PyJWT</td><td>passlib/bcrypt + python-jose</td><td>CVE de python-jose y recomendación OWASP</td><td>64 MiB por hash; concurrencia limitada</td></tr>
+                <tr><td>JWT en <code>sessionStorage</code></td><td><code>localStorage</code> o cookie HttpOnly</td><td>Sobrevive a F5 sin quedar en equipos compartidos</td><td>Cada pestaña nueva pide login</td></tr>
+                <tr><td>Supabase + Render + Vercel</td><td>Servidor propio o VPS</td><td>HTTPS/WSS y despliegue reproducible sin costo</td><td>Cold start, 512 MB y pooler obligatorio</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-ia" data-titulo="Anexo de uso de IA">
+          <h2><span class="chip">06</span> Anexo de uso de IA</h2>
+          <p class="entradilla">La pauta pide qué herramienta, en qué parte y cómo se verificó. No basta decir «usamos IA»: hay que poder mostrar la verificación.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Herramienta</th><th>Parte del trabajo</th><th>Verificación aplicada</th></tr></thead>
+              <tbody>
+                <tr><td>Claude Code (Anthropic)</td><td>Auditoría del backend, integración del predictor y WS, blindaje OWASP, CRUD, repositorios y suite de tests</td><td>Paridad |Δ| &lt; 1e-4, 270 tests, mutación 20/20, ruff y bandit en cero, revisión manual de diffs</td></tr>
+                <tr><td>Gemini (Google)</td><td>Hito 1: arquitectura de información y justificación técnica; apoyo en prompts y maquetación del Hito 2</td><td>Contraste con documentación oficial y revisión del equipo</td></tr>
+                <tr><td>Asistencia de redacción</td><td>Este manual y la organización de la checklist</td><td>Contrastado contra el repositorio, el documento del Hito 2 y <code>/api/health</code>; el equipo debe revisarlo y firmarlo</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Declaración honesta.</b> Este manual fue redactado con asistencia de IA y verificado contra el código y el servicio en vivo. Agrega en el anexo final qué partes revisó cada integrante y qué corrigió; una declaración genérica se nota.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-datos" data-titulo="Anexo de datos personales">
+          <h2><span class="chip">07</span> Anexo de datos personales</h2>
+          <p class="entradilla">Análisis preliminar para la Ley 21.719. La regla de oro: el sistema trata datos de cuenta e historial, pero <strong>no persiste biometría</strong>.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Dato</th><th>Finalidad</th><th>Minimización</th><th>Medida técnica</th><th>Supresión / rectificación</th></tr></thead>
+              <tbody>
+                <tr><td><code>username</code></td><td>Identificación de cuenta</td><td>Sin nombre real, RUT ni teléfono</td><td>Patrón validado y anti-enumeración</td><td><code>DELETE /api/users/me</code></td></tr>
+                <tr><td><code>email</code></td><td>Contacto y unicidad</td><td>Un correo normalizado</td><td><code>UNIQUE</code>, <code>no-store</code>, nunca en logs</td><td><code>PATCH</code> o borrado con la cuenta</td></tr>
+                <tr><td><code>password_hash</code></td><td>Autenticación</td><td>Nunca se guarda la contraseña</td><td>Argon2id 64 MiB, t=3, p=4 + rate limit</td><td>Se elimina con la cuenta</td></tr>
+                <tr><td><code>history</code></td><td>Contexto de traducciones</td><td>Cero biometría; solo con <code>save_history</code></td><td>JWT, anti-BOLA, <code>no-store</code>, <code>echo=False</code></td><td><code>PATCH</code> del texto y <code>DELETE</code> en cascada</td></tr>
+                <tr><td>Landmarks / IP</td><td>Inferencia y anti-DoS</td><td>Solo en RAM; nunca en BD ni logs</td><td>Sin eco en 422; purga a los 60 s</td><td>Se descartan al responder o expirar</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>Corregir la política vigente.</b> <code>docs/ethics-data/policy.md</code> dice «historial local por defecto, sync opcional con cifrado», lo que ya no describe el sistema. Actualizarla antes de firmar este anexo; si no, el documento se contradice con el código.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="e-cierre" data-titulo="Plan de cierre">
+          <h2><span class="chip">08</span> Plan de cierre</h2>
+          <p class="entradilla">Del 23 al 27 de noviembre. El 25 se congela el producto; los dos días finales son para documentación, video y ensayo, no para refactorizar.</p>
+
+          <div class="linea-tiempo">
+            <div class="hito-t"><span class="fecha">23–24 nov</span><b>Cerrar el producto</b><span>Flujo completo probado, bugs de demo corregidos, cuenta demo con historial, sin cambios de arquitectura.</span></div>
+            <div class="hito-t"><span class="fecha">25 nov · congelar</span><b>Documentación y limpieza</b><span>PDF final en <code>docs/</code>, ADR corregido, política de datos actualizada, README con enlaces, este manual publicado.</span></div>
+            <div class="hito-t"><span class="fecha">26 nov</span><b>Video y ensayo</b><span>Grabar los 2 minutos, subirlo con enlace público, ensayar el recorrido de 10 minutos con el docente simulado.</span></div>
+            <div class="hito-t"><span class="fecha">27 nov · 23:59</span><b>Cierre</b><span>Verificar que todo esté en GitHub, no en el escritorio. Última comprobación del health y del video sin sesión iniciada.</span></div>
+            <div class="hito-t"><span class="fecha">30 nov – 4 dic</span><b>Revisión en sala</b><span>Video sin comentarios y recorrido del producto por el docente. El equipo responde preguntas, no toca el teclado.</span></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= 06 · DEMO ================= -->
+      <section class="panel" id="panel-demo" role="tabpanel" aria-labelledby="tab-demo" data-panel="demo" hidden="">
+
+        <section class="seccion" id="d-guion" data-titulo="Guion de demo de 7 minutos">
+          <h2><span class="chip">01</span> Guion de demo de 7 minutos</h2>
+          <p class="entradilla">El Hito 3 se juega en el recorrido del docente, no en la presentación. Este guion sirve para ensayar ese recorrido y para la defensa oral si la piden.</p>
+
+          <div class="tabla-envoltura">
+            <table>
+              <thead><tr><th>Tramo</th><th>Qué mostrar</th><th>Qué demuestra</th></tr></thead>
+              <tbody>
+                <tr><td><strong>0:00–0:40</strong></td><td>Problema en una frase, promesa y <code>/api/health</code> con modelo cargado</td><td>Contexto y servicio vivo</td></tr>
+                <tr><td><strong>0:40–2:20</strong></td><td>Traductor en vivo: modo automático, una seña clara, alternativa y audio</td><td>A1 · flujo principal</td></tr>
+                <tr><td><strong>2:20–3:10</strong></td><td>Modo manual y una seña distinta; mostrar confianza y aviso de encuadre</td><td>A1 · A3 · estados</td></tr>
+                <tr><td><strong>3:10–4:10</strong></td><td>Login, guardar en historial, recargar la página y abrir <code>/historial</code></td><td>A1 · persistencia real</td></tr>
+                <tr><td><strong>4:10–4:50</strong></td><td>Corregir texto, escuchar y eliminar con confirmación</td><td>A1 · CRUD completo</td></tr>
+                <tr><td><strong>4:50–5:30</strong></td><td>Perfil, privacidad y accesibilidad (<kbd>Alt</kbd>+<kbd>A</kbd>)</td><td>A3 · B5</td></tr>
+                <tr><td><strong>5:30–6:10</strong></td><td>Glosario: buscar, filtrar y girar una tarjeta</td><td>Alcance del vocabulario</td></tr>
+                <tr><td><strong>6:10–7:00</strong></td><td>Arquitectura en una frase: navegador extrae, servidor infiere, base persiste; límites declarados</td><td>A2 · B2</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="aviso ok">
+            <p><b>Ensayo obligatorio.</b> Ejecuta el guion con una persona que no haya visto el proyecto y no la interrumpas. Anota dónde se pierde. Ese punto es el que hay que arreglar en la interfaz o en el manual.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="d-video" data-titulo="Video promocional de 2 minutos">
+          <h2><span class="chip">02</span> Video promocional de 2 minutos</h2>
+          <p class="entradilla">Estructura sugerida por la pauta: 20 segundos de problema, 80 de producto real, 20 de promesa y cierre. Sin música ni imágenes de terceros sin crédito.</p>
+
+          <div class="grid grid-3">
+            <div class="tarjeta"><span class="etiqueta">0:00–0:20</span><h4>Problema</h4><p class="chico">Una persona sorda intenta comunicarse en un servicio y no la entienden. Voz en off breve: dos millones de personas en Chile. No muestres el logo todavía.</p></div>
+            <div class="tarjeta"><span class="etiqueta">0:20–1:40</span><h4>Producto</h4><p class="chico">Grabación de pantalla real: abrir la web, encender cámara, hacer una seña, ver el texto, reproducir el audio, guardar y recargar el historial. Sin cortes que oculten la carga.</p></div>
+            <div class="tarjeta"><span class="etiqueta">1:40–2:00</span><h4>Promesa y cierre</h4><p class="chico">«Traducimos LSCh a texto y voz sin enviar tu video». Logo, equipo, repositorio y una línea de límites: herramienta de apoyo, no intérprete certificado.</p></div>
+          </div>
+
+          <div class="tabla-envoltura">
+            <table class="tabla-mini">
+              <thead><tr><th>Regla</th><th>Por qué</th></tr></thead>
+              <tbody>
+                <tr><td>Máximo 2:00 exactos</td><td>Al segundo 121 la evaluación se detiene.</td></tr>
+                <tr><td>Producto real, no láminas</td><td>Grabar láminas deja B4 en el nivel más bajo.</td></tr>
+                <tr><td>Texto legible al proyectar</td><td>El video se ve en sala, no en tu monitor.</td></tr>
+                <tr><td>Audio en lugar silencioso</td><td>La voz es la que explica el producto.</td></tr>
+                <tr><td>Enlace público en README</td><td>Si pide permiso, no se puede evaluar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="seccion" id="d-fallas" data-titulo="Fallas frecuentes y solución">
+          <h2><span class="chip">03</span> Fallas frecuentes y solución</h2>
+          <p class="entradilla">Las tres primeras son las que más aparecen en la revisión. Las demás están ordenadas por síntoma para que el equipo las resuelva sin adivinar.</p>
+
+          <div class="grid grid-3">
+            <div class="tarjeta"><span class="pill bad">1</span><h4>«Servidor sin conexión»</h4><p class="chico">El dominio no está en <code>ALLOWED_ORIGINS</code> o el backend devolvió un 500 sin cabeceras CORS. Revisa el dominio exacto y los logs de Render.</p></div>
+            <div class="tarjeta"><span class="pill bad">2</span><h4>WebSocket cierra con 1008</h4><p class="chico">El <code>Origin</code> no coincide o hay más de 5 conexiones por IP. Cierra pestañas y confirma <code>wss://</code> y el dominio sin barra final.</p></div>
+            <div class="tarjeta"><span class="pill bad">3</span><h4>La cámara no enciende</h4><p class="chico">Permiso denegado, falta HTTPS o otra aplicación usa la cámara. Prueba en <code>localhost</code> o en Vercel, y cierra Zoom/Meet.</p></div>
+          </div>
+
+          <details><summary>La primera carga tarda cerca de un minuto</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> Render Free suspende la instancia por inactividad. <strong>Solución:</strong> espera hasta 75 s o haz un <code>GET /api/health</code> cinco minutos antes de la demo para despertarla. No recargues en bucle.</p></div></details>
+          <details><summary>«Demasiados intentos» aparece para todos</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> <code>TRUST_PROXY_HOPS</code> no coincide con la infraestructura y todos los clientes comparten la misma IP. <strong>Solución:</strong> revisa el log de Render, ajusta el número de saltos y valida que 6 logins fallen con <code>429</code> pero otra red reciba <code>401</code>.</p></div></details>
+          <details><summary>401 después de recargar o de cambiar de pestaña</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> el JWT vive en <code>sessionStorage</code>, expira a los 60 minutos y no se comparte entre pestañas. <strong>Solución:</strong> vuelve a iniciar sesión. Es una decisión de seguridad, no un bug.</p></div></details>
+          <details><summary>413 al enviar una secuencia larga</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> JSON sin redondear supera los 5 MB. <strong>Solución:</strong> usa el binario <code>Float32Array</code> (6.516 bytes por cuadro) o reduce la secuencia; el máximo son 600 cuadros.</p></div></details>
+          <details><summary>503 en <code>/api/health</code></summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> PostgreSQL o el modelo no están disponibles. <strong>Solución:</strong> revisa el pooler de Supabase, la contraseña codificada y el arranque de Render. Si el modelo no carga, el servidor no inicia.</p></div></details>
+          <details><summary>Al editar una entrada responde 404</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> la entrada no existe o pertenece a otro usuario. Por diseño se responde <code>404</code> y no <code>403</code>, para no filtrar existencia. <strong>Solución:</strong> actualiza la lista; si persiste, revisa que el token sea del mismo usuario.</p></div></details>
+          <details><summary>El build de Angular falla por versión de Node</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> Angular CLI exige Node <code>^22.22.3 || ^24.15.0 || &gt;=26</code>. <strong>Solución:</strong> usa Node 24.15 o superior; en el entorno del proyecto se puede invocar <code>npx -y node@24.15.0 …</code> sin cambiar el sistema.</p></div></details>
+          <details><summary><code>psql</code> no conecta a Supabase</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> se usó la conexión directa IPv6. <strong>Solución:</strong> copia la URL del Transaction pooler (6543) o Session pooler (5432), codifica <code>@</code> como <code>%40</code> y no inventes el índice <code>aws-N</code>.</p></div></details>
+          <details><summary><code>pytest</code> aborta antes de correr</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> la base no termina en <code>_test</code> o no es local. <strong>Solución:</strong> usa <code>signia_test</code> en <code>127.0.0.1</code>. Nunca apuntes la suite a Supabase: trunca tablas.</p></div></details>
+          <details><summary>El historial no muestra nada tras guardar</summary><div class="detalle-cuerpo"><p><strong>Causa:</strong> el interruptor «Guardar en mi historial» estaba apagado, la confianza no superó 0,55 o la sesión no era válida. <strong>Solución:</strong> revisa los tres; el guardado es opt-in y solo ocurre con <code>aceptada=true</code>.</p></div></details>
+        </section>
+
+        <section class="seccion" id="d-predemo" data-titulo="Checklist antes de la revisión">
+          <h2><span class="chip">04</span> Checklist antes de la revisión</h2>
+          <p class="entradilla">Se marca a mano el mismo día. No cuenta para el puntaje de la checklist principal; es la lista de seguridad del equipo.</p>
+
+          <div class="items">
+            <label class="check"><input type="checkbox" data-predemo="1"><span><b>Despertar Render y confirmar health 200</b><small>Cinco minutos antes, no durante.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="2"><span><b>Cuenta demo creada y con historial</b><small>Contraseña disponible sin escribirla en el repositorio.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="3"><span><b>Cámara y micrófono del equipo de sala probados</b><small>Con el mismo navegador que se usará.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="4"><span><b>Pestañas limpias y sin sesiones cruzadas</b><small>Cierra otras pestañas de SeñaCL para no agotar el cupo WS.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="5"><span><b>Video de 2 minutos con enlace público</b><small>Probar en incógnito.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="6"><span><b>Manual y PDF final abiertos en <code>docs/</code></b><small>En el repositorio, no en el escritorio.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="7"><span><b>Plan B si falla internet</b><small>Capturas o video de respaldo; la ejecución en vivo sigue siendo obligatoria.</small></span></label>
+            <label class="check"><input type="checkbox" data-predemo="8"><span><b>Nadie toca el teclado durante la revisión</b><small>El docente ejecuta; el equipo solo responde.</small></span></label>
+          </div>
+
+          <div class="aviso peligro">
+            <p><b>Una grabación no reemplaza la demo.</b> La pauta es explícita: la evaluación pide que funcione ahora. Lleva respaldo, pero ejecuta en vivo.</p>
+          </div>
+        </section>
+
+        <section class="seccion" id="d-enlaces" data-titulo="Enlaces y contactos">
+          <h2><span class="chip">05</span> Enlaces y contactos</h2>
+          <p class="entradilla">Todo lo que el docente puede necesitar, en un solo lugar.</p>
+
+          <div class="grid grid-2">
+            <div class="tarjeta">
+              <h4>Producto</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">→</span><span><a href="https://singcl.vercel.app/" target="_blank" rel="noopener">Web publicada</a></span></li>
+                <li><span class="ic">→</span><span><a href="https://se-ascl.onrender.com/api/health" target="_blank" rel="noopener">Health de la API</a></span></li>
+                <li><span class="ic">→</span><span><a href="https://github.com/ju4n0ff/se-ascl" target="_blank" rel="noopener">Repositorio en GitHub</a></span></li>
+              </ul>
+            </div>
+            <div class="tarjeta">
+              <h4>Equipo</h4>
+              <ul class="lista-limpia">
+                <li><span class="ic">→</span><span>Javier Ignacio Concha · <code>@a3rshH</code></span></li>
+                <li><span class="ic">→</span><span>Luis Jesús Urbina Garcidueñas · <code>@LuisU1138</code></span></li>
+                <li><span class="ic">→</span><span>Juan Carlos Vega Graterol · <code>@ju4n0ff</code></span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="aviso info">
+            <p><b>Este archivo es autocontenido.</b> Se abre con doble clic, no necesita build ni internet, y se puede publicar tal cual en GitHub Pages o en cualquier hosting estático. Para imprimir o guardar como PDF, usa el botón <strong>PDF</strong> de la barra superior.</p>
+          </div>
+        </section>
+      </section>
+
+<!--PART3-->
+    </div>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="pie-int">
+    <div>
+      <div class="firma">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#174a78"></rect><path d="M20 38c0-8 5-14 12-14s12 6 12 14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"></path><circle cx="32" cy="46" r="4" fill="#d9b98f"></circle></svg>
+        SeñaCL · Hito 3
+      </div>
+      <p>Manual técnico, de uso y de entrega del proyecto semestral INGT1003 · Arquitectura de Desarrollo (Móvil y Web) · Universidad Mayor. Documento autocontenido: no requiere conexión ni build.</p>
+    </div>
+    <div class="tenue" style="text-align:right">
+      <div>Concha · Urbina · Vega</div>
+      <div>Santiago, Chile · 2026</div>
+      <div class="mono" style="font-size:.68rem;margin-top:.2rem">v3.0 · 2026-11-23</div>
+    </div>
+  </div>
+</footer>
+
+<div class="buscador" id="buscador" role="dialog" aria-modal="true" aria-labelledby="buscar-titulo" hidden="">
+  <div class="buscador-caja">
+    <div class="buscador-cab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <label for="q" class="solo-lectores" id="buscar-titulo">Buscar en el manual</label>
+      <input id="q" type="search" placeholder="Buscar: websocket, RLS, cámara, Argon2id…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="resultados" id="resultados" role="listbox" aria-label="Resultados"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- utilidades ---------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const norm = (s) => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let toastTimer = 0;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("visible"), 2300);
+}
+
+/* ---------- tema claro / oscuro ---------- */
+const KEY_TEMA = "senacl.manual.tema";
+const html = document.documentElement;
+function aplicarTema(t){
+  html.dataset.tema = t;
+  try { localStorage.setItem(KEY_TEMA, t); } catch (e) {}
+  const b = $("#tema");
+  b.setAttribute("aria-label", t === "oscuro" ? "Cambiar a tema claro" : "Cambiar a tema oscuro");
+  b.setAttribute("title", t === "oscuro" ? "Tema claro" : "Tema oscuro");
+}
+let temaInicial = "claro";
+try { temaInicial = localStorage.getItem(KEY_TEMA) || (matchMedia("(prefers-color-scheme: dark)").matches ? "oscuro" : "claro"); } catch (e) {}
+aplicarTema(temaInicial === "oscuro" ? "oscuro" : "claro");
+$("#tema").addEventListener("click", () => aplicarTema(html.dataset.tema === "oscuro" ? "claro" : "oscuro"));
+
+/* ---------- pestañas ---------- */
+const tabs = $$(".pestana");
+const paneles = $$(".panel");
+const NOMBRES_CAP = {
+  resumen: "Resumen", tecnico: "Manual técnico", uso: "Manual de uso",
+  instalacion: "Instalación", entrega: "Centro de entrega", demo: "Demo y fallas"
+};
+
+function tituloSeccion(sec){
+  return (sec.dataset.titulo || (sec.querySelector("h2") ? sec.querySelector("h2").textContent : "")).replace(/^\s*\d+\s*/, "").trim();
+}
+
+function activarTab(id, opts){
+  opts = opts || {};
+  const tab = tabs.find((t) => t.dataset.tab === id);
+  if (!tab) return;
+  tabs.forEach((t) => {
+    const on = t === tab;
+    t.setAttribute("aria-selected", on ? "true" : "false");
+    t.tabIndex = on ? 0 : -1;
+  });
+  paneles.forEach((p) => {
+    const on = p.dataset.panel === id;
+    p.classList.toggle("activo", on);
+    if (on) p.removeAttribute("hidden"); else p.setAttribute("hidden", "");
+  });
+  construirSubnav(id);
+  if (!opts.silencioso){
+    try { history.replaceState(null, "", "#" + id); } catch (e) { location.hash = id; }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  if (opts.foco) tab.focus({ preventScroll: true });
+}
+
+tabs.forEach((t) => t.addEventListener("click", () => activarTab(t.dataset.tab)));
+$(".pestanas-int").addEventListener("keydown", (e) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+  const i = tabs.indexOf(document.activeElement);
+  if (i < 0) return;
+  e.preventDefault();
+  let n = i;
+  if (e.key === "ArrowRight") n = (i + 1) % tabs.length;
+  if (e.key === "ArrowLeft") n = (i - 1 + tabs.length) % tabs.length;
+  if (e.key === "Home") n = 0;
+  if (e.key === "End") n = tabs.length - 1;
+  activarTab(tabs[n].dataset.tab, { foco: true });
+});
+
+/* ---------- navegación lateral + scrollspy ---------- */
+let seccionesActuales = [];
+function construirSubnav(id){
+  const panel = paneles.find((p) => p.dataset.panel === id);
+  const nav = $("#subnav");
+  if (!panel || !nav) return;
+  nav.innerHTML = "";
+  const secciones = $$("section.seccion", panel);
+  secciones.forEach((sec, i) => {
+    const a = document.createElement("a");
+    a.href = "#" + sec.id;
+    a.textContent = tituloSeccion(sec);
+    if (i === 0) a.classList.add("activo");
+    a.addEventListener("click", (ev) => { ev.preventDefault(); irASeccion(sec.id); });
+    nav.appendChild(a);
+  });
+  observar(panel);
+}
+
+function irASeccion(id){
+  const sec = document.getElementById(id);
+  if (!sec) return;
+  const panel = sec.closest(".panel");
+  if (panel && !panel.classList.contains("activo")) activarTab(panel.dataset.panel, { silencioso: true });
+  try { history.replaceState(null, "", "#" + id); } catch (e) { location.hash = id; }
+  requestAnimationFrame(() => sec.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+function observar(panel){
+  seccionesActuales = $$("section.seccion", panel);
+  actualizarSubnav();
+}
+
+function actualizarSubnav(){
+  const links = $$("#subnav a");
+  if (!links.length || !seccionesActuales.length) return;
+  let activo = links[0];
+  seccionesActuales.forEach((sec) => {
+    if (sec.getBoundingClientRect().top <= 158) {
+      const a = links.find((l) => l.getAttribute("href") === "#" + sec.id);
+      if (a) activo = a;
+    }
+  });
+  links.forEach((l) => l.classList.remove("activo"));
+  if (activo) activo.classList.add("activo");
+}
+
+$$("[data-ir]").forEach((el) => {
+  el.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    activarTab(el.dataset.ir);
+  });
+});
+
+/* ---------- enlaces directos ---------- */
+function initHash(){
+  const h = decodeURIComponent((location.hash || "").slice(1));
+  if (!h) { activarTab("resumen", { silencioso: true }); return; }
+  if ($("#tab-" + h)) { activarTab(h, { silencioso: true }); return; }
+  const sec = document.getElementById(h);
+  if (sec && sec.closest(".panel")) {
+    activarTab(sec.closest(".panel").dataset.panel, { silencioso: true });
+    setTimeout(() => sec.scrollIntoView({ behavior: "auto", block: "start" }), 80);
+    return;
+  }
+  activarTab("resumen", { silencioso: true });
+}
+window.addEventListener("hashchange", () => {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if ($("#tab-" + h)) activarTab(h, { silencioso: true });
+  else if (document.getElementById(h)) irASeccion(h);
+});
+
+/* ---------- buscador ---------- */
+const indice = [];
+paneles.forEach((p) => {
+  $$("section.seccion", p).forEach((sec) => {
+    let plano = (sec.textContent || "").replace(/\s+/g, " ").trim().replace(/^\d+\s+/, "");
+    indice.push({ panel: p.dataset.panel, id: sec.id, titulo: tituloSeccion(sec), plano, texto: norm(plano) });
+  });
+});
+
+const overlay = $("#buscador");
+const campo = $("#q");
+const lista = $("#resultados");
+let seleccion = -1;
+let resultados = [];
+
+function abrirBuscador(){
+  overlay.hidden = false;
+  overlay.classList.add("abierto");
+  campo.value = "";
+  pintarResultados("");
+  setTimeout(() => campo.focus(), 30);
+}
+function cerrarBuscador(){
+  overlay.classList.remove("abierto");
+  overlay.hidden = true;
+  seleccion = -1;
+}
+function recorte(plano, n){
+  if (!n) return plano.slice(0, 120) + (plano.length > 120 ? "…" : "");
+  const i = norm(plano).indexOf(n);
+  if (i < 0) return plano.slice(0, 120) + "…";
+  const ini = Math.max(0, i - 42);
+  const fin = Math.min(plano.length, i + 96);
+  return (ini ? "…" : "") + plano.slice(ini, fin) + (fin < plano.length ? "…" : "");
+}
+function pintarResultados(qv){
+  const n = norm(qv);
+  if (!n) {
+    resultados = indice.slice(0, 6);
+  } else {
+    resultados = indice
+      .filter((x) => x.texto.includes(n))
+      .sort((a, b) => (norm(b.titulo).includes(n) ? 1 : 0) - (norm(a.titulo).includes(n) ? 1 : 0))
+      .slice(0, 12);
+  }
+  lista.innerHTML = "";
+  seleccion = -1;
+  if (!resultados.length) {
+    lista.innerHTML = '<div class="vacio-busca">Sin resultados. Prueba con «websocket», «RLS», «cámara» o «Argon2id».</div>';
+    return;
+  }
+  resultados.forEach((x, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "resultado";
+    b.setAttribute("role", "option");
+    b.setAttribute("aria-selected", "false");
+    b.innerHTML = '<span class="ruta">' + esc(NOMBRES_CAP[x.panel] || x.panel) + "</span><b>" + esc(x.titulo) + "</b><span>" + esc(recorte(x.plano, n)) + "</span>";
+    b.addEventListener("click", () => irResultado(x));
+    b.addEventListener("mousemove", () => marcar(i));
+    lista.appendChild(b);
+  });
+}
+function marcar(i){
+  const hijos = $$(".resultado", lista);
+  hijos.forEach((h, j) => {
+    h.classList.toggle("sel", j === i);
+    h.setAttribute("aria-selected", j === i ? "true" : "false");
+  });
+  seleccion = i;
+  if (hijos[i]) hijos[i].scrollIntoView({ block: "nearest" });
+}
+function irResultado(x){
+  cerrarBuscador();
+  activarTab(x.panel, { silencioso: true });
+  setTimeout(() => irASeccion(x.id), 40);
+}
+campo.addEventListener("input", () => pintarResultados(campo.value));
+campo.addEventListener("keydown", (e) => {
+  const total = resultados.length;
+  if (e.key === "ArrowDown") { e.preventDefault(); marcar(total ? (seleccion + 1) % total : -1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); marcar(total ? (seleccion - 1 + total) % total : -1); }
+  else if (e.key === "Enter") { e.preventDefault(); if (resultados[seleccion]) irResultado(resultados[seleccion]); else if (resultados[0]) irResultado(resultados[0]); }
+  else if (e.key === "Escape") { e.preventDefault(); cerrarBuscador(); }
+});
+overlay.addEventListener("click", (e) => { if (e.target === overlay) cerrarBuscador(); });
+$("#abrir-buscador").addEventListener("click", abrirBuscador);
+
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  const escribiendo = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+  if (e.key === "/" && !escribiendo) { e.preventDefault(); abrirBuscador(); }
+  if (e.key === "Escape" && overlay.classList.contains("abierto")) cerrarBuscador();
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    if (!escribiendo && !overlay.classList.contains("abierto") && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      const actual = tabs.findIndex((x) => x.getAttribute("aria-selected") === "true");
+      if (actual < 0) return;
+      const n = e.key === "ArrowRight" ? (actual + 1) % tabs.length : (actual - 1 + tabs.length) % tabs.length;
+      activarTab(tabs[n].dataset.tab, { foco: true });
+    }
+  }
+});
+
+/* ---------- copiar código ---------- */
+async function copiar(texto){
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = texto;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+$$(".copiar").forEach((b) => {
+  b.addEventListener("click", async () => {
+    const pre = b.closest(".bloque-codigo").querySelector("pre");
+    const ok = await copiar(pre.innerText);
+    const original = b.textContent;
+    b.textContent = ok ? "Copiado" : "No se pudo";
+    b.classList.toggle("hecho", ok);
+    toast(ok ? "Código copiado al portapapeles" : "Selecciona el código y copia manualmente");
+    setTimeout(() => { b.textContent = original; b.classList.remove("hecho"); }, 1600);
+  });
+});
+
+/* ---------- pestañas de sistema operativo ---------- */
+$$(".os-tabs").forEach((grupo) => {
+  const botones = $$(".os-boton", grupo);
+  const panelesSO = $$(".os-panel", grupo);
+  botones.forEach((b) => {
+    b.addEventListener("click", () => {
+      botones.forEach((x) => {
+        const on = x === b;
+        x.classList.toggle("activo", on);
+        x.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      panelesSO.forEach((p) => {
+        const on = p.dataset.ospanel === b.dataset.ostab;
+        p.classList.toggle("activo", on);
+        if (on) p.removeAttribute("hidden"); else p.setAttribute("hidden", "");
+      });
+    });
+  });
+});
+
+/* ---------- checklist ponderada ---------- */
+const PESOS = { A1: 18, A2: 12, A3: 8, A4: 7, A5: 5, B1: 12, B2: 12, B3: 6, B4: 14, B5: 6 };
+const KEY_CHECK = "senacl.manual.hito3.v1";
+const checks = $$("input[data-crit]");
+let guardados = [];
+try { guardados = JSON.parse(localStorage.getItem(KEY_CHECK) || "[]"); } catch (e) { guardados = []; }
+checks.forEach((c) => { if (guardados.includes(c.value)) c.checked = true; });
+
+const contBarras = $("#barras-criterio");
+Object.keys(PESOS).forEach((k) => {
+  const fila = document.createElement("div");
+  fila.className = "barra-linea";
+  fila.innerHTML = '<span>' + k + '</span><span class="tubo"><i id="bar-' + k + '"></i></span><span id="txt-' + k + '">0/0</span>';
+  contBarras.appendChild(fila);
+});
+
+function calcular(){
+  const por = {};
+  Object.keys(PESOS).forEach((k) => { por[k] = { t: 0, h: 0 }; });
+  let total = 0, hechos = 0;
+  checks.forEach((c) => {
+    const k = c.dataset.crit;
+    if (!por[k]) return;
+    por[k].t++;
+    total++;
+    if (c.checked) { por[k].h++; hechos++; }
+  });
+  let puntos = 0;
+  Object.keys(PESOS).forEach((k) => { puntos += PESOS[k] * (por[k].t ? por[k].h / por[k].t : 0); });
+  return { total, hechos, puntos, por };
+}
+
+function pintar(){
+  const r = calcular();
+  const pct = r.total ? Math.round((r.hechos / r.total) * 100) : 0;
+  $("#pct-global").textContent = pct + " %";
+  $("#pts-global").textContent = Math.round(r.puntos);
+  const C = 276.46;
+  $("#anillo-progreso").setAttribute("stroke-dashoffset", String(C - (C * pct) / 100));
+  $("#resumen-texto").textContent = r.hechos + " de " + r.total + " requisitos marcados. " +
+    (pct === 100 ? "Cobertura completa: falta la revisión del docente." : "El puntaje es cobertura ponderada, no la nota oficial.");
+  Object.keys(PESOS).forEach((k) => {
+    const p = r.por[k];
+    const pc = p.t ? Math.round((p.h / p.t) * 100) : 0;
+    const bar = document.getElementById("bar-" + k);
+    const txt = document.getElementById("txt-" + k);
+    if (bar) bar.style.width = pc + "%";
+    if (txt) txt.textContent = p.h + "/" + p.t + " · " + Math.round(PESOS[k] * (p.t ? p.h / p.t : 0)) + "p";
+    $$('[data-avance="' + k + '"]').forEach((el) => { el.textContent = p.h + "/" + p.t; });
+  });
+}
+
+function guardarCheck(){
+  try { localStorage.setItem(KEY_CHECK, JSON.stringify(checks.filter((c) => c.checked).map((c) => c.value))); } catch (e) {}
+}
+checks.forEach((c) => c.addEventListener("change", () => { guardarCheck(); pintar(); }));
+
+function resumenTexto(){
+  const r = calcular();
+  const lineas = [
+    "SeñaCL · Hito 3 · cobertura de entrega",
+    "Fecha: " + new Date().toLocaleDateString("es-CL"),
+    "Requisitos: " + r.hechos + "/" + r.total + " · Puntos cubiertos: " + Math.round(r.puntos) + "/100",
+    ""
+  ];
+  Object.keys(PESOS).forEach((k) => {
+    const p = r.por[k];
+    lineas.push(k + " (" + PESOS[k] + " pts): " + p.h + "/" + p.t);
+    checks.filter((c) => c.dataset.crit === k && !c.checked).forEach((c) => {
+      const span = c.closest(".check").querySelector("span b");
+      lineas.push("  - Falta: " + (span ? span.textContent.trim() : c.value));
+    });
+  });
+  return lineas.join("\n");
+}
+
+$("#copiar-resumen").addEventListener("click", async () => {
+  const ok = await copiar(resumenTexto());
+  toast(ok ? "Resumen copiado: pégalo en la bitácora o en el chat del equipo" : "No se pudo copiar el resumen");
+});
+$("#reiniciar-check").addEventListener("click", () => {
+  if (!confirm("¿Reiniciar la checklist del Hito 3? Se borrarán las marcas guardadas en este navegador.")) return;
+  checks.forEach((c) => { c.checked = false; });
+  try { localStorage.removeItem(KEY_CHECK); } catch (e) {}
+  pintar();
+  toast("Checklist reiniciada");
+});
+
+/* ---------- checklists auxiliares ---------- */
+const KEY_EXTRA = "senacl.manual.extra.v1";
+let extras = {};
+try { extras = JSON.parse(localStorage.getItem(KEY_EXTRA) || "{}"); } catch (e) { extras = {}; }
+$$("input[data-limpio], input[data-predemo]").forEach((c) => {
+  const clave = (c.dataset.limpio ? "limpio-" : "predemo-") + (c.dataset.limpio || c.dataset.predemo);
+  if (extras[clave]) c.checked = true;
+  c.addEventListener("change", () => {
+    extras[clave] = c.checked;
+    try { localStorage.setItem(KEY_EXTRA, JSON.stringify(extras)); } catch (e) {}
+  });
+});
+
+/* ---------- barra de progreso de lectura ---------- */
+function progresoLectura(){
+  const h = document.documentElement;
+  const max = h.scrollHeight - h.clientHeight;
+  $("#barra-progreso").style.width = (max > 0 ? Math.min(100, (h.scrollTop / max) * 100) : 0) + "%";
+}
+window.addEventListener("scroll", () => { actualizarSubnav(); progresoLectura(); }, { passive: true });
+window.addEventListener("resize", progresoLectura);
+
+/* ---------- imprimir / PDF ---------- */
+$("#imprimir").addEventListener("click", () => window.print());
+let detallesAbiertos = [];
+window.addEventListener("beforeprint", () => {
+  detallesAbiertos = $$("details").filter((d) => !d.open);
+  detallesAbiertos.forEach((d) => { d.open = true; });
+});
+window.addEventListener("afterprint", () => {
+  detallesAbiertos.forEach((d) => { d.open = false; });
+  detallesAbiertos = [];
+});
+
+/* ---------- arranque ---------- */
+initHash();
+pintar();
+progresoLectura();
+})();
+</script>
+
+
+</body></html>
